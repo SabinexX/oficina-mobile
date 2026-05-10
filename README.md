@@ -1,77 +1,104 @@
-📱 Sobre o Projeto
+# Oficina Sabino - Frontend Mobile
 
-Aplicativo mobile da Mecânica Sabino desenvolvido em React Native com Expo.
+Aplicativo mobile da Oficina Sabino, desenvolvido com React Native e Expo.
 
-O objetivo do aplicativo é facilitar o gerenciamento da oficina, permitindo:
+## Tecnologias
 
-Criar orçamentos automotivos
-Gerar PDF para clientes
-Controlar custos e lucros
-Gerenciar peças e serviços
-Futuramente integrar IA para busca de peças
-Integração futura com backend Java + PostgreSQL
-🚀 Tecnologias Utilizadas
-Front-end Mobile
+- React Native
+- Expo
+- React Navigation
+- React Native Paper
+- Expo Image Picker
+
+## Funcionalidades atuais
+
+- Tela Home
+- Cadastro de clientes
+- Cadastro de carros
+- Cadastro de várias fotos do veículo
+- Tela de orçamento
+- Tela de histórico
+- Tela visual de busca de peças com IA
+
+## Tela de carros
+
+Permite cadastrar veículos com:
+
+- cliente
+- placa
+- modelo
+- marca
+- ano
+- várias fotos do carro
+- fotos pela câmera
+- fotos pela galeria
+
+As fotos ainda ficam no estado local do aplicativo.
+
+## Tela de busca de peças com IA
+
+Protótipo visual para:
+
+- digitar a placa do veículo
+- simular dados do carro
+- pesquisar peça desejada
+- listar opções de compra
+- comparar preço, marca e loja
+- abrir link do produto
+
+No momento ainda não usa IA real nem API externa.
+
+## Como rodar
+
+Instale as dependências:
+
+```bash
+npm install
+
+Instale o Image Picker:
+
+npx expo install expo-image-picker
+
+Rode o projeto:
+
+npx expo start
+
+Depois escolha:
+
+a - abrir no Android
+w - abrir no navegador
+ou escanear o QR Code pelo Expo Go
+Estrutura básica
+src/
+├── components/
+├── routes/
+├── screens/
+├── styles/
+└── utils/
+Integração futura com backend
+
+O app será conectado ao backend Kotlin/Spring Boot usando requisições HTTP.
+
+Fluxo esperado:
+
 React Native
-Expo
-React Native Paper
-React Navigation
-📦 Instalações Realizadas
-1️⃣ Criação do Projeto Expo
+↓
+Axios ou Fetch
+↓
+Spring Boot
+↓
+PostgreSQL
+Próximos passos
+Conectar cadastro de clientes ao backend
+Conectar cadastro de veículos ao backend
+Enviar fotos para o backend
+Criar orçamento real
+Criar histórico real
+Selecionar fotos para fechamento
+Gerar PDF de fechamento
+Integrar IA real para busca de peças
+Autor
 
-Comando utilizado:
+Projeto desenvolvido por Bruno Sabino.
 
-npx create-expo-app@latest oficina
-Motivo
-
-O Expo facilita o desenvolvimento mobile, principalmente para testes rápidos no iPhone utilizando o aplicativo Expo Go.
-
-2️⃣ Instalação do React Native Paper
-
-Comando:
-
-npm install react-native-paper
-Motivo
-
-Biblioteca de componentes visuais modernos para React Native.
-
-Benefícios:
-
-Visual mais profissional
-Cards prontos
-Botões estilizados
-Inputs modernos
-Melhor organização visual
-3️⃣ Dependências do Paper
-
-Comando:
-
-npx expo install react-native-safe-area-context react-native-vector-icons react-native-screens react-native-gesture-handler react-native-reanimated
-Motivo
-
-Dependências necessárias para:
-
-Ícones
-Navegação
-Compatibilidade iOS
-Animações
-Safe Area do iPhone
-4️⃣ Instalação da Navegação
-
-Comando:
-
-npm install @react-navigation/native
-
-E:
-
-npm install @react-navigation/native-stack
-Motivo
-
-Permitir troca de telas no aplicativo.
-
-Exemplo:
-
-Home
-Novo orçamento
-Histórico
-Clientes
+Sistema pensado para a Mecânica Sabino.
