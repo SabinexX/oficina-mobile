@@ -1,190 +1,208 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Text, TextInput, Button, Card, Divider } from "react-native-paper";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Alert,
+} from "react-native";
+
+import api from "../api/api";
 
 export default function ClientesScreen() {
+  const [clientes, setClientes] = useState([]);
+
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [cpf, setCpf] = useState("");
 
-  const [clientes, setClientes] = useState([]);
+  async function carregarClientes() {
+    try {
+      const response = await api.get("/clientes");
 
-  function adicionarCliente() {
-    if (!nome || !telefone) {
-      alert("Preencha pelo menos nome e telefone.");
+      setClientes(response.data);
+    } catch (error) {
+      console.log("Erro ao buscar clientes:", error);
+      Alert.alert("Erro", "Não foi possível carregar os clientes.");
+    }
+  }
+
+  async function cadastrarCliente() {
+    if (!nome || !telefone || !cpf) {
+      Alert.alert("Atenção", "Preencha todos os campos.");
       return;
     }
 
-    const novoCliente = {
-      id: Date.now().toString(),
-      nome,
-      telefone,
-      cpf,
-    };
+    try {
+      const novoCliente = {
+        nome: nome,
+        telefone: telefone,
+        cpf: cpf,
+      };
 
-    setClientes([...clientes, novoCliente]);
+      await api.post("/clientes", novoCliente);
 
-    setNome("");
-    setTelefone("");
-    setCpf("");
+      setNome("");
+      setTelefone("");
+      setCpf("");
+
+      carregarClientes();
+
+      Alert.alert("Sucesso", "Cliente cadastrado com sucesso.");
+    } catch (error) {
+      console.log("Erro ao cadastrar cliente:", error);
+      Alert.alert("Erro", "Não foi possível cadastrar o cliente.");
+    }
   }
 
-  function removerCliente(id) {
-    const listaAtualizada = clientes.filter((cliente) => cliente.id !== id);
-    setClientes(listaAtualizada);
+  async function deletarCliente(id) {
+    try {
+      await api.delete(`/clientes/${id}`);
+
+      carregarClientes();
+
+      Alert.alert("Sucesso", "Cliente removido com sucesso.");
+    } catch (error) {
+      console.log("Erro ao deletar cliente:", error);
+      Alert.alert("Erro", "Não foi possível deletar o cliente.");
+    }
   }
+
+  useEffect(() => {
+    carregarClientes();
+  }, []);
 
   return (
-    <ScrollView style={styles.container}>
-      <Text variant="headlineMedium" style={styles.titulo}>
-        Clientes
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.titulo}>Clientes</Text>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleLarge" style={styles.subtitulo}>
-            Cadastrar cliente
-          </Text>
+      <View style={styles.formulario}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nome do cliente"
+          value={nome}
+          onChangeText={setNome}
+        />
 
-          <TextInput
-            label="Nome do cliente"
-            value={nome}
-            onChangeText={setNome}
-            mode="outlined"
-            style={styles.input}
-          />
+        <TextInput
+          style={styles.input}
+          placeholder="Telefone"
+          value={telefone}
+          onChangeText={setTelefone}
+          keyboardType="phone-pad"
+        />
 
-          <TextInput
-            label="Telefone"
-            value={telefone}
-            onChangeText={setTelefone}
-            mode="outlined"
-            keyboardType="phone-pad"
-            style={styles.input}
-          />
+        <TextInput
+          style={styles.input}
+          placeholder="CPF"
+          value={cpf}
+          onChangeText={setCpf}
+          keyboardType="numeric"
+        />
 
-          <TextInput
-            label="CPF opcional"
-            value={cpf}
-            onChangeText={setCpf}
-            mode="outlined"
-            keyboardType="numeric"
-            style={styles.input}
-          />
+        <TouchableOpacity style={styles.botaoCadastrar} onPress={cadastrarCliente}>
+          <Text style={styles.textoBotao}>Cadastrar Cliente</Text>
+        </TouchableOpacity>
+      </View>
 
-          <Button
-            mode="contained"
-            onPress={adicionarCliente}
-            style={styles.botaoAdicionar}
-          >
-            Salvar cliente
-          </Button>
-        </Card.Content>
-      </Card>
+      <FlatList
+        data={clientes}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.nome}>{item.nome}</Text>
+            <Text style={styles.info}>Telefone: {item.telefone}</Text>
+            <Text style={styles.info}>CPF: {item.cpf}</Text>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleLarge" style={styles.subtitulo}>
-            Clientes cadastrados
-          </Text>
-
-          {clientes.length === 0 ? (
-            <Text style={styles.textoVazio}>Nenhum cliente cadastrado.</Text>
-          ) : (
-            clientes.map((cliente) => (
-              <View key={cliente.id} style={styles.clienteItem}>
-                <Text style={styles.nomeCliente}>{cliente.nome}</Text>
-
-                <Text style={styles.infoCliente}>
-                  Telefone: {cliente.telefone}
-                </Text>
-
-                {cliente.cpf ? (
-                  <Text style={styles.infoCliente}>CPF: {cliente.cpf}</Text>
-                ) : null}
-
-                <Button
-                  mode="outlined"
-                  onPress={() => removerCliente(cliente.id)}
-                  style={styles.botaoRemover}
-                  textColor="#b00020"
-                >
-                  Remover
-                </Button>
-
-                <Divider style={styles.divider} />
-              </View>
-            ))
-          )}
-        </Card.Content>
-      </Card>
-    </ScrollView>
+            <TouchableOpacity
+              style={styles.botaoExcluir}
+              onPress={() => deletarCliente(item.id)}
+            >
+              <Text style={styles.textoExcluir}>Excluir</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
     backgroundColor: "#d8ccb3",
-    padding: 16,
   },
 
   titulo: {
-    color: "#0f5132",
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 16,
-    marginTop: 10,
+    color: "#0f3d2e",
+    marginBottom: 20,
+    textAlign: "center",
   },
 
-  card: {
-    marginBottom: 16,
-    borderRadius: 18,
-    backgroundColor: "#fff",
-  },
-
-  subtitulo: {
-    color: "#0f5132",
-    fontWeight: "bold",
-    marginBottom: 12,
+  formulario: {
+    backgroundColor: "#ffffff",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 20,
   },
 
   input: {
-    marginBottom: 12,
-    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#cccccc",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    backgroundColor: "#f9f9f9",
   },
 
-  botaoAdicionar: {
-    backgroundColor: "#198754",
-    borderRadius: 12,
-    paddingVertical: 5,
+  botaoCadastrar: {
+    backgroundColor: "#0f6b3f",
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
   },
 
-  textoVazio: {
-    color: "#777",
-  },
-
-  clienteItem: {
-    marginBottom: 12,
-  },
-
-  nomeCliente: {
-    fontSize: 17,
+  textoBotao: {
+    color: "#ffffff",
     fontWeight: "bold",
-    color: "#0f5132",
-    marginBottom: 4,
+    fontSize: 16,
   },
 
-  infoCliente: {
-    color: "#444",
-    marginBottom: 3,
+  card: {
+    backgroundColor: "#ffffff",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 3,
   },
 
-  botaoRemover: {
-    marginTop: 8,
-    borderColor: "#b00020",
+  nome: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#0f3d2e",
   },
 
-  divider: {
+  info: {
+    fontSize: 15,
+    marginTop: 4,
+    color: "#333333",
+  },
+
+  botaoExcluir: {
+    backgroundColor: "#b00020",
+    padding: 10,
+    borderRadius: 8,
     marginTop: 12,
+    alignItems: "center",
+  },
+
+  textoExcluir: {
+    color: "#ffffff",
+    fontWeight: "bold",
   },
 });
