@@ -6,6 +6,8 @@ import NovoOrcamentoScreen from "../screens/NovoOrcamentoScreen";
 import ClientesScreen from "../screens/ClientesScreen";
 import HistoricoScreen from "../screens/HistoricoScreen";
 import OrcamentosScreen from "../screens/OrcamentosScreen";
+import BuscaPecasIAScreen from "../screens/BuscaPecasIAScreen";
+import CarrosScreen from "../screens/CarrosScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +61,30 @@ export default function AppRoutes() {
                 component={OrcamentosScreen}
                 options={{
                     title: "Orçamentos",
+                    headerStyle: {
+                        backgroundColor: "#0f5132",
+                    },
+                    headerTintColor: "#fff",
+                }}
+            />
+
+            <Stack.Screen
+                name="BuscaPecasIA"
+                component={BuscaPecasIAScreen}
+                options={{
+                    title: "Busca de Peças com IA",
+                    headerStyle: {
+                        backgroundColor: "#0f5132",
+                    },
+                    headerTintColor: "#fff",
+                }}
+            />
+
+            <Stack.Screen
+                name="Carros"
+                component={CarrosScreen}
+                options={{
+                    title: "Carros",
                     headerStyle: {
                         backgroundColor: "#0f5132",
                     },

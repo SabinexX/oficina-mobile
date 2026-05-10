@@ -6,6 +6,7 @@ import AppRoutes from "./src/routes/AppRoutes";
 import HomeScreen from "./src/screens/HomeScreen";
 import NovoOrcamentoScreen from "./src/screens/NovoOrcamentoScreen";
 
+
 export default function App() {
   return (
     <PaperProvider>

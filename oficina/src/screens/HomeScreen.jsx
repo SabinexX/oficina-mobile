@@ -77,6 +77,21 @@ export default function HomeScreen({ navigation }) {
                 </TouchableRipple>
 
                 <TouchableRipple
+                    onPress={() => navigation.navigate("BuscaPecasIA")}
+                    rippleColor="rgba(255,255,255,0.25)"
+                    style={styles.ripple}
+                >
+                    <Card style={styles.cardBotaoEscuro} mode="elevated">
+                        <Card.Content>
+                            <Text style={styles.cardBotaoTitulo}>Buscar Peças com IA</Text>
+                            <Text style={styles.cardBotaoTexto}>
+                                Consultar veículo pela placa e comparar peças
+                            </Text>
+                        </Card.Content>
+                    </Card>
+                </TouchableRipple>
+
+                <TouchableRipple
                     onPress={() => navigation.navigate("Clientes")}
                     rippleColor="rgba(255,255,255,0.25)"
                     style={styles.ripple}
@@ -86,6 +101,24 @@ export default function HomeScreen({ navigation }) {
                             <Text style={styles.cardBotaoTitulo}>Clientes</Text>
                             <Text style={styles.cardBotaoTexto}>
                                 Cadastro e gerenciamento
+                            </Text>
+                        </Card.Content>
+                    </Card>
+                </TouchableRipple>
+
+                <TouchableRipple
+                    onPress={() => navigation.navigate("Carros")}
+                    rippleColor="rgba(255,255,255,0.25)"
+                    style={styles.ripple}
+                >
+                    <Card style={styles.cardBotaoEscuro} mode="elevated">
+                        <Card.Content>
+                            <Text style={styles.cardBotaoTitulo}>
+                                Carros
+                            </Text>
+
+                            <Text style={styles.cardBotaoTexto}>
+                                Cadastre os veículos dos clientes com foto
                             </Text>
                         </Card.Content>
                     </Card>
