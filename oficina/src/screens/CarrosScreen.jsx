@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, View, Image } from "react-native";
+import {
+    ScrollView,
+    StyleSheet,
+    View,
+    Image,
+} from "react-native";
+
 import {
     Text,
     Card,
@@ -8,106 +14,244 @@ import {
     Divider,
     IconButton,
 } from "react-native-paper";
+
 import * as ImagePicker from "expo-image-picker";
 
 export default function CarrosScreen() {
+
+    // ================================
+    // ESTADOS DOS INPUTS
+    // ================================
+
     const [cliente, setCliente] = useState("");
     const [placa, setPlaca] = useState("");
     const [modelo, setModelo] = useState("");
     const [marca, setMarca] = useState("");
     const [ano, setAno] = useState("");
-    const [fotosCarro, setFotoCarro] = useState([]);
 
+    // ARRAY DE FOTOS
+    const [fotosCarro, setFotosCarro] = useState([]);
+
+    // LISTA DOS CARROS
     const [carros, setCarros] = useState([]);
 
-    async function tirarFotoCarro() {
-        const permissao = await ImagePicker.requestCameraPermissionsAsync();
 
+
+    // ================================
+    // FUNÇÃO PARA TIRAR FOTO
+    // ================================
+
+    async function tirarFotoCarro() {
+
+        // pede permissão para câmera
+        const permissao =
+            await ImagePicker.requestCameraPermissionsAsync();
+
+        // verifica se permitiu
         if (!permissao.granted) {
-            alert("Você precisa permitir o uso da câmera.");
+
+            alert("Permissão da câmera negada.");
             return;
         }
 
-        const resultado = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            quality: 0.8,
-        });
+        // abre câmera
+        const resultado =
+            await ImagePicker.launchCameraAsync({
 
+                allowsEditing: true,
+                quality: 0.8,
+            });
+
+        // verifica se tirou foto
         if (!resultado.canceled) {
-            setFotoCarro(resultado.assets[0].uri);
+
+            // pega a foto nova
+            const novaFoto =
+                resultado.assets[0].uri;
+
+            // adiciona no array
+            setFotosCarro([
+                ...fotosCarro,
+                novaFoto
+            ]);
         }
     }
+
+
+
+    // ================================
+    // ESCOLHER FOTO DA GALERIA
+    // ================================
 
     async function escolherFotoCarro() {
-        const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
+        // pede permissão da galeria
+        const permissao =
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        // verifica permissão
         if (!permissao.granted) {
-            alert("Você precisa permitir o acesso à galeria.");
+
+            alert("Permissão da galeria negada.");
             return;
         }
 
-        const resultado = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 0.8,
-        });
+        // abre galeria
+        const resultado =
+            await ImagePicker.launchImageLibraryAsync({
 
+                mediaTypes:
+                    ImagePicker.MediaTypeOptions.Images,
+
+                allowsMultipleSelection: true,
+
+                quality: 0.8,
+            });
+
+        // verifica se selecionou
         if (!resultado.canceled) {
-            setFotoCarro(resultado.assets[0].uri);
+
+            // pega todas fotos selecionadas
+            const novasFotos =
+                resultado.assets.map(
+                    (item) => item.uri
+                );
+
+            // adiciona no array
+            setFotosCarro([
+                ...fotosCarro,
+                ...novasFotos
+            ]);
         }
     }
 
+
+
+    // ================================
+    // CADASTRAR CARRO
+    // ================================
+
     function cadastrarCarro() {
-        if (!cliente || !placa || !modelo) {
-            alert("Preencha pelo menos cliente, placa e modelo.");
+
+        // validação
+        if (
+            !cliente ||
+            !placa ||
+            !modelo
+        ) {
+
+            alert(
+                "Preencha cliente, placa e modelo."
+            );
+
             return;
         }
 
+        // cria objeto
         const novoCarro = {
+
             id: Date.now().toString(),
+
             cliente,
+
             placa: placa.toUpperCase(),
+
             modelo,
+
             marca,
+
             ano,
-            foto: fotosCarro,
+
+            // ARRAY DE FOTOS
+            fotos: fotosCarro,
         };
 
-        setCarros([...carros, novoCarro]);
+        // adiciona na lista
+        setCarros([
+            ...carros,
+            novoCarro
+        ]);
 
+        // limpa campos
         setCliente("");
         setPlaca("");
         setModelo("");
         setMarca("");
         setAno("");
-        setFotoCarro(null);
+
+        // limpa fotos
+        setFotosCarro([]);
     }
 
+
+
+    // ================================
+    // EXCLUIR CARRO
+    // ================================
+
     function excluirCarro(id) {
-        const novaLista = carros.filter((carro) => carro.id !== id);
+
+        const novaLista =
+            carros.filter(
+                (carro) => carro.id !== id
+            );
+
         setCarros(novaLista);
     }
 
+
+
+    // ================================
+    // TELA
+    // ================================
+
     return (
+
         <ScrollView style={styles.container}>
+
+            {/* HEADER */}
+
             <View style={styles.header}>
-                <Text style={styles.titulo}>Cadastro de Carros</Text>
-                <Text style={styles.subtitulo}>
-                    Cadastre os veículos dos clientes com foto para identificar melhor quando entrarem na oficina.
+
+                <Text style={styles.titulo}>
+                    Cadastro de Carros
                 </Text>
+
+                <Text style={styles.subtitulo}>
+                    Cadastre veículos com várias fotos
+                    para acompanhar entrada,
+                    avarias e etapas do serviço.
+                </Text>
+
             </View>
 
+
+
+            {/* FORMULÁRIO */}
+
             <Card style={styles.card}>
+
                 <Card.Content>
-                    <Text style={styles.cardTitulo}>Dados do veículo</Text>
+
+                    <Text style={styles.cardTitulo}>
+                        Dados do veículo
+                    </Text>
+
+
+
+                    {/* CLIENTE */}
 
                     <TextInput
-                        label="Nome do cliente"
+                        label="Cliente"
                         value={cliente}
                         onChangeText={setCliente}
                         mode="outlined"
                         style={styles.input}
                     />
+
+
+
+                    {/* PLACA */}
 
                     <TextInput
                         label="Placa"
@@ -118,6 +262,10 @@ export default function CarrosScreen() {
                         style={styles.input}
                     />
 
+
+
+                    {/* MODELO */}
+
                     <TextInput
                         label="Modelo"
                         value={modelo}
@@ -126,6 +274,10 @@ export default function CarrosScreen() {
                         style={styles.input}
                     />
 
+
+
+                    {/* MARCA */}
+
                     <TextInput
                         label="Marca"
                         value={marca}
@@ -133,6 +285,10 @@ export default function CarrosScreen() {
                         mode="outlined"
                         style={styles.input}
                     />
+
+
+
+                    {/* ANO */}
 
                     <TextInput
                         label="Ano"
@@ -143,68 +299,149 @@ export default function CarrosScreen() {
                         style={styles.input}
                     />
 
+
+
+                    {/* GALERIA DE FOTOS */}
+
                     <View style={styles.areaFoto}>
-                        {fotoCarro ? (
-                            <Image source={{ uri: fotoCarro }} style={styles.fotoCarro} />
+
+
+                        {/* MOSTRA TODAS AS FOTOS */}
+
+                        {fotosCarro.length > 0 ? (
+
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                            >
+
+                                {fotosCarro.map((foto, index) => (
+
+                                    <Image
+                                        key={index}
+                                        source={{ uri: foto }}
+                                        style={styles.fotoMiniatura}
+                                    />
+
+                                ))}
+
+                            </ScrollView>
+
                         ) : (
+
                             <View style={styles.semFoto}>
+
                                 <Text style={styles.textoSemFoto}>
                                     Nenhuma foto selecionada
                                 </Text>
+
                             </View>
+
                         )}
+
+
+
+                        {/* BOTÃO CÂMERA */}
 
                         <Button
                             mode="contained"
-                            onPress={tirarFotoCarro}
                             buttonColor="#0f5132"
                             style={styles.botaoFoto}
+                            onPress={tirarFotoCarro}
                         >
                             Tirar foto
                         </Button>
 
+
+
+                        {/* BOTÃO GALERIA */}
+
                         <Button
                             mode="outlined"
-                            onPress={escolherFotoCarro}
                             textColor="#0f5132"
                             style={styles.botaoFoto}
+                            onPress={escolherFotoCarro}
                         >
                             Escolher da galeria
                         </Button>
+
                     </View>
+
+
+
+                    {/* BOTÃO CADASTRAR */}
 
                     <Button
                         mode="contained"
-                        onPress={cadastrarCarro}
                         buttonColor="#198754"
                         style={styles.botaoCadastrar}
+                        onPress={cadastrarCarro}
                     >
                         Cadastrar carro
                     </Button>
+
                 </Card.Content>
+
             </Card>
 
+
+
+            {/* LISTA */}
+
             <View style={styles.listaArea}>
-                <Text style={styles.listaTitulo}>Carros cadastrados</Text>
+
+                <Text style={styles.listaTitulo}>
+                    Carros cadastrados
+                </Text>
+
+
 
                 {carros.length === 0 && (
+
                     <Text style={styles.listaVazia}>
-                        Nenhum carro cadastrado ainda.
+                        Nenhum carro cadastrado.
                     </Text>
+
                 )}
 
+
+
                 {carros.map((carro) => (
-                    <Card key={carro.id} style={styles.cardCarro}>
+
+                    <Card
+                        key={carro.id}
+                        style={styles.cardCarro}
+                    >
+
                         <Card.Content>
-                            {carro.foto ? (
-                                <Image source={{ uri: carro.foto }} style={styles.fotoLista} />
-                            ) : (
-                                <View style={styles.fotoListaVazia}>
-                                    <Text style={styles.textoSemFoto}>Sem foto</Text>
-                                </View>
-                            )}
+
+
+
+                            {/* GALERIA DAS FOTOS */}
+
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                            >
+
+                                {carro.fotos.map((foto, index) => (
+
+                                    <Image
+                                        key={index}
+                                        source={{ uri: foto }}
+                                        style={styles.fotoLista}
+                                    />
+
+                                ))}
+
+                            </ScrollView>
+
+
+
+                            {/* TÍTULO */}
 
                             <View style={styles.linhaTitulo}>
+
                                 <Text style={styles.nomeCarro}>
                                     {carro.modelo}
                                 </Text>
@@ -213,49 +450,86 @@ export default function CarrosScreen() {
                                     icon="delete"
                                     iconColor="#dc3545"
                                     size={24}
-                                    onPress={() => excluirCarro(carro.id)}
+                                    onPress={() =>
+                                        excluirCarro(carro.id)
+                                    }
                                 />
+
                             </View>
+
+
 
                             <Divider style={styles.divisor} />
 
-                            <Text style={styles.info}>Cliente: {carro.cliente}</Text>
-                            <Text style={styles.info}>Placa: {carro.placa}</Text>
-                            <Text style={styles.info}>Marca: {carro.marca || "Não informado"}</Text>
-                            <Text style={styles.info}>Ano: {carro.ano || "Não informado"}</Text>
+
+
+                            {/* INFOS */}
+
+                            <Text style={styles.info}>
+                                Cliente: {carro.cliente}
+                            </Text>
+
+                            <Text style={styles.info}>
+                                Placa: {carro.placa}
+                            </Text>
+
+                            <Text style={styles.info}>
+                                Marca: {carro.marca || "Não informado"}
+                            </Text>
+
+                            <Text style={styles.info}>
+                                Ano: {carro.ano || "Não informado"}
+                            </Text>
+
                         </Card.Content>
+
                     </Card>
+
                 ))}
+
             </View>
+
         </ScrollView>
     );
 }
 
+
+
 const styles = StyleSheet.create({
+
     container: {
         flex: 1,
         backgroundColor: "#d8ccb3",
     },
 
+
+
     header: {
         backgroundColor: "#0f5132",
         padding: 26,
+
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
     },
 
+
+
     titulo: {
         color: "#fff",
-        fontSize: 25,
+        fontSize: 26,
         fontWeight: "bold",
     },
+
+
 
     subtitulo: {
         color: "#d1e7dd",
         marginTop: 8,
-        fontSize: 15,
         lineHeight: 22,
+        fontSize: 15,
     },
+
+
 
     card: {
         margin: 20,
@@ -263,63 +537,88 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
     },
 
+
+
     cardTitulo: {
         fontSize: 20,
         fontWeight: "bold",
         color: "#0f5132",
-        marginBottom: 14,
+        marginBottom: 15,
     },
+
+
 
     input: {
         marginBottom: 12,
         backgroundColor: "#fff",
     },
 
+
+
     areaFoto: {
         marginTop: 10,
         marginBottom: 15,
     },
 
-    fotoCarro: {
-        width: "100%",
-        height: 200,
+
+
+    fotoMiniatura: {
+        width: 150,
+        height: 150,
         borderRadius: 16,
+        marginRight: 10,
         marginBottom: 12,
     },
 
+
+
     semFoto: {
         width: "100%",
-        height: 170,
+        height: 160,
+
         borderRadius: 16,
+
         backgroundColor: "#e9ecef",
+
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 12,
+
         borderWidth: 1,
         borderColor: "#adb5bd",
         borderStyle: "dashed",
+
+        marginBottom: 12,
     },
+
+
 
     textoSemFoto: {
         color: "#6c757d",
         fontSize: 15,
     },
 
+
+
     botaoFoto: {
-        borderRadius: 12,
         marginBottom: 10,
+        borderRadius: 12,
     },
+
+
 
     botaoCadastrar: {
         borderRadius: 12,
         paddingVertical: 5,
-        marginTop: 5,
     },
+
+
 
     listaArea: {
         paddingHorizontal: 20,
         paddingBottom: 30,
     },
+
+
 
     listaTitulo: {
         fontSize: 22,
@@ -328,11 +627,14 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
 
+
+
     listaVazia: {
         color: "#555",
         fontSize: 15,
-        marginBottom: 20,
     },
+
+
 
     cardCarro: {
         borderRadius: 20,
@@ -340,22 +642,17 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
 
+
+
     fotoLista: {
-        width: "100%",
-        height: 180,
-        borderRadius: 16,
+        width: 150,
+        height: 150,
+        borderRadius: 14,
+        marginRight: 10,
         marginBottom: 12,
     },
 
-    fotoListaVazia: {
-        width: "100%",
-        height: 130,
-        borderRadius: 16,
-        backgroundColor: "#e9ecef",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 12,
-    },
+
 
     linhaTitulo: {
         flexDirection: "row",
@@ -363,15 +660,21 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
+
+
     nomeCarro: {
         fontSize: 20,
         fontWeight: "bold",
         color: "#212529",
     },
 
+
+
     divisor: {
         marginVertical: 10,
     },
+
+
 
     info: {
         fontSize: 15,
