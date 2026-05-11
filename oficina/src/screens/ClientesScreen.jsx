@@ -7,6 +7,10 @@ import {
   FlatList,
   StyleSheet,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 
 import api from "../api/api";
@@ -18,10 +22,18 @@ export default function ClientesScreen() {
   const [telefone, setTelefone] = useState("");
   const [cpf, setCpf] = useState("");
 
+  const [clienteEditando, setClienteEditando] = useState(null);
+
+  const [mostrarPesquisa, setMostrarPesquisa] = useState(false);
+  const [pesquisa, setPesquisa] = useState("");
+
+  useEffect(() => {
+    carregarClientes();
+  }, []);
+
   async function carregarClientes() {
     try {
       const response = await api.get("/clientes");
-
       setClientes(response.data);
     } catch (error) {
       console.log("Erro ao buscar clientes:", error);
@@ -29,40 +41,100 @@ export default function ClientesScreen() {
     }
   }
 
-  async function cadastrarCliente() {
-    if (!nome || !telefone || !cpf) {
-      Alert.alert("Atenção", "Preencha todos os campos.");
+  function limparFormulario() {
+    setNome("");
+    setTelefone("");
+    setCpf("");
+    setClienteEditando(null);
+    Keyboard.dismiss();
+  }
+
+  function clienteDuplicado() {
+    return clientes.find((cliente) => {
+      if (clienteEditando && cliente.id === clienteEditando.id) {
+        return false;
+      }
+
+      const telefoneIgual =
+        telefone.trim() !== "" &&
+        cliente.telefone?.trim() === telefone.trim();
+
+      const cpfIgual =
+        cpf.trim() !== "" &&
+        cliente.cpf?.trim() === cpf.trim();
+
+      return telefoneIgual || cpfIgual;
+    });
+  }
+
+  async function salvarCliente() {
+    if (!nome || !telefone) {
+      Alert.alert("Atenção", "Preencha pelo menos nome e telefone.");
+      return;
+    }
+
+    const duplicado = clienteDuplicado();
+
+    if (duplicado) {
+      Alert.alert(
+        "Atenção",
+        "Já existe um cliente cadastrado com esse telefone ou CPF."
+      );
       return;
     }
 
     try {
-      const novoCliente = {
-        nome: nome,
-        telefone: telefone,
-        cpf: cpf,
+      const dadosCliente = {
+        nome,
+        telefone,
+        cpf,
       };
 
-      await api.post("/clientes", novoCliente);
+      if (clienteEditando) {
+        await api.put(`/clientes/${clienteEditando.id}`, dadosCliente);
+        Alert.alert("Sucesso", "Cliente atualizado com sucesso.");
+      } else {
+        await api.post("/clientes", dadosCliente);
+        Alert.alert("Sucesso", "Cliente cadastrado com sucesso.");
+      }
 
-      setNome("");
-      setTelefone("");
-      setCpf("");
-
+      limparFormulario();
       carregarClientes();
-
-      Alert.alert("Sucesso", "Cliente cadastrado com sucesso.");
     } catch (error) {
-      console.log("Erro ao cadastrar cliente:", error);
-      Alert.alert("Erro", "Não foi possível cadastrar o cliente.");
+      console.log("Erro ao salvar cliente:", error);
+      Alert.alert("Erro", "Não foi possível salvar o cliente.");
     }
+  }
+
+  function editarCliente(cliente) {
+    setClienteEditando(cliente);
+    setNome(cliente.nome || "");
+    setTelefone(cliente.telefone || "");
+    setCpf(cliente.cpf || "");
+  }
+
+  function confirmarExcluir(cliente) {
+    Alert.alert(
+      "Excluir cliente",
+      `Tem certeza que deseja excluir ${cliente.nome}?`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => deletarCliente(cliente.id),
+        },
+      ]
+    );
   }
 
   async function deletarCliente(id) {
     try {
       await api.delete(`/clientes/${id}`);
-
       carregarClientes();
-
       Alert.alert("Sucesso", "Cliente removido com sucesso.");
     } catch (error) {
       console.log("Erro ao deletar cliente:", error);
@@ -70,91 +142,197 @@ export default function ClientesScreen() {
     }
   }
 
-  useEffect(() => {
-    carregarClientes();
-  }, []);
+  const clientesFiltrados = clientes.filter((cliente) => {
+    const texto = pesquisa.toLowerCase();
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Clientes</Text>
+    return (
+      cliente.nome?.toLowerCase().includes(texto) ||
+      cliente.cpf?.toLowerCase().includes(texto) ||
+      cliente.telefone?.toLowerCase().includes(texto)
+    );
+  });
 
-      <View style={styles.formulario}>
-        <TextInput
-          style={styles.input}
-          placeholder="Nome do cliente"
-          value={nome}
-          onChangeText={setNome}
-        />
+  function renderCabecalho() {
+    return (
+      <>
+        <Text style={styles.titulo}>Clientes</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Telefone"
-          value={telefone}
-          onChangeText={setTelefone}
-          keyboardType="phone-pad"
-        />
+        <View style={styles.formulario}>
+          <Text style={styles.subtitulo}>
+            {clienteEditando ? "Editar cliente" : "Cadastrar novo cliente"}
+          </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="CPF"
-          value={cpf}
-          onChangeText={setCpf}
-          keyboardType="numeric"
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Nome do cliente"
+            value={nome}
+            onChangeText={setNome}
+          />
 
-        <TouchableOpacity style={styles.botaoCadastrar} onPress={cadastrarCliente}>
-          <Text style={styles.textoBotao}>Cadastrar Cliente</Text>
-        </TouchableOpacity>
-      </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Telefone"
+            value={telefone}
+            onChangeText={setTelefone}
+            keyboardType="phone-pad"
+          />
 
-      <FlatList
-        data={clientes}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.nome}>{item.nome}</Text>
-            <Text style={styles.info}>Telefone: {item.telefone}</Text>
-            <Text style={styles.info}>CPF: {item.cpf}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="CPF opcional"
+            value={cpf}
+            onChangeText={setCpf}
+            keyboardType="numeric"
+          />
 
+          <TouchableOpacity style={styles.botaoCadastrar} onPress={salvarCliente}>
+            <Text style={styles.textoBotao}>
+              {clienteEditando ? "Salvar Alterações" : "Cadastrar Cliente"}
+            </Text>
+          </TouchableOpacity>
+
+          {clienteEditando && (
             <TouchableOpacity
-              style={styles.botaoExcluir}
-              onPress={() => deletarCliente(item.id)}
+              style={styles.botaoCancelar}
+              onPress={limparFormulario}
             >
-              <Text style={styles.textoExcluir}>Excluir</Text>
+              <Text style={styles.textoCancelar}>Cancelar edição</Text>
             </TouchableOpacity>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={styles.botaoPesquisar}
+          onPress={() => setMostrarPesquisa(!mostrarPesquisa)}
+        >
+          <Text style={styles.textoBotao}>
+            {mostrarPesquisa
+              ? "Fechar pesquisa"
+              : "Pesquisar clientes cadastrados"}
+          </Text>
+        </TouchableOpacity>
+
+        {mostrarPesquisa && (
+          <View style={styles.areaPesquisa}>
+            <TextInput
+              style={styles.input}
+              placeholder="Pesquisar por nome, CPF ou telefone"
+              value={pesquisa}
+              onChangeText={setPesquisa}
+            />
           </View>
         )}
-      />
-    </View>
+
+        <Text style={styles.contadorClientes}>
+          Clientes cadastrados: {clientesFiltrados.length}
+        </Text>
+      </>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.tela}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <FlatList
+            data={mostrarPesquisa ? clientesFiltrados : clientes}
+            keyExtractor={(item) => item.id}
+            ListHeaderComponent={renderCabecalho}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.lista}
+            ListEmptyComponent={
+              <Text style={styles.textoVazio}>Nenhum cliente encontrado.</Text>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <View style={styles.cardTopo}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarTexto}>
+                      {item.nome ? item.nome.charAt(0).toUpperCase() : "C"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.nome}>{item.nome}</Text>
+                    <Text style={styles.info}>Telefone: {item.telefone}</Text>
+                    <Text style={styles.info}>
+                      CPF: {item.cpf ? item.cpf : "Não informado"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.areaBotoesCard}>
+                  <TouchableOpacity
+                    style={styles.botaoEditar}
+                    onPress={() => editarCliente(item)}
+                  >
+                    <Text style={styles.textoEditar}>Editar</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.botaoExcluir}
+                    onPress={() => confirmarExcluir(item)}
+                  >
+                    <Text style={styles.textoExcluir}>Excluir</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  tela: {
+    flex: 1,
+    backgroundColor: "#d8ccb3",
+  },
+
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#d8ccb3",
+    paddingHorizontal: 20,
+  },
+
+  lista: {
+    paddingTop: 20,
+    paddingBottom: 50,
   },
 
   titulo: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#0f3d2e",
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: "center",
   },
 
   formulario: {
     backgroundColor: "#ffffff",
     padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
+    borderRadius: 16,
+    marginBottom: 14,
+    elevation: 3,
+  },
+
+  subtitulo: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#0f3d2e",
+    marginBottom: 12,
   },
 
   input: {
     borderWidth: 1,
     borderColor: "#cccccc",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     marginBottom: 10,
     backgroundColor: "#f9f9f9",
@@ -163,7 +341,7 @@ const styles = StyleSheet.create({
   botaoCadastrar: {
     backgroundColor: "#0f6b3f",
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
 
@@ -173,12 +351,73 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  botaoCancelar: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#0f6b3f",
+  },
+
+  textoCancelar: {
+    color: "#0f6b3f",
+    fontWeight: "bold",
+  },
+
+  botaoPesquisar: {
+    backgroundColor: "#0f3d2e",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  areaPesquisa: {
+    backgroundColor: "#ffffff",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  contadorClientes: {
+    color: "#0f3d2e",
+    fontWeight: "bold",
+    marginBottom: 12,
+    fontSize: 15,
+  },
+
   card: {
     backgroundColor: "#ffffff",
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
     elevation: 3,
+  },
+
+  cardTopo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#0f6b3f",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  avatarTexto: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 20,
+  },
+
+  cardInfo: {
+    flex: 1,
   },
 
   nome: {
@@ -189,20 +428,47 @@ const styles = StyleSheet.create({
 
   info: {
     fontSize: 15,
-    marginTop: 4,
+    marginTop: 3,
     color: "#333333",
   },
 
+  areaBotoesCard: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+
+  botaoEditar: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#0f6b3f",
+    padding: 11,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  textoEditar: {
+    color: "#0f6b3f",
+    fontWeight: "bold",
+  },
+
   botaoExcluir: {
+    flex: 1,
     backgroundColor: "#b00020",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 12,
+    padding: 11,
+    borderRadius: 10,
     alignItems: "center",
   },
 
   textoExcluir: {
     color: "#ffffff",
     fontWeight: "bold",
+  },
+
+  textoVazio: {
+    color: "#555",
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
   },
 });
