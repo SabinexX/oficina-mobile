@@ -1,266 +1,284 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
 import {
+  View,
   Text,
-  Card,
-  Button,
-  Divider,
-  Chip,
-  TouchableRipple,
-} from "react-native-paper";
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
+import { Card, Button, Divider } from "react-native-paper";
+import api from "../api/api";
 
-export default function HistoricoScreen() {
+export default function HistoricoScreen({ navigation }) {
+  const [servicos, setServicos] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
 
-  // DADOS EXEMPLO
-  const [historico, setHistorico] = useState([
-    {
-      id: "1",
-      cliente: "Qualita",
-      carro: "Fiat Punto",
-      placa: "MFB3J28",
-      valor: 850,
-      lucro: 320,
-      status: "Finalizado",
-      data: "05/05/2026",
-    },
+  useEffect(() => {
+    carregarHistorico();
+  }, []);
 
-    {
-      id: "2",
-      cliente: "Charles",
-      carro: "Gol G5",
-      placa: "MJD2789",
-      valor: 420,
-      lucro: 180,
-      status: "Orçamento",
-      data: "04/05/2026",
-    },
-  ]);
+  async function carregarHistorico() {
+    try {
+      setCarregando(true);
+
+      const resposta = await api.get("/servicos");
+
+      const finalizados = resposta.data.filter(
+        (servico) => servico.status === "SERVICO_FINALIZADO"
+      );
+
+      setServicos(finalizados);
+    } catch (erro) {
+      console.log("Erro ao carregar histórico:", erro);
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  const servicosFiltrados = servicos.filter((servico) => {
+    const texto = busca.toLowerCase();
+
+    return (
+      servico.cliente?.nome?.toLowerCase().includes(texto) ||
+      servico.cliente?.cpf?.toLowerCase().includes(texto) ||
+      servico.veiculo?.placa?.toLowerCase().includes(texto) ||
+      servico.veiculo?.modelo?.toLowerCase().includes(texto)
+    );
+  });
 
   function formatarMoeda(valor) {
-    return valor.toLocaleString("pt-BR", {
+    return Number(valor || 0).toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
     });
   }
 
-  function removerItem(id) {
-    const listaAtualizada = historico.filter(
-      (item) => item.id !== id
-    );
+  function formatarData(data) {
+    if (!data) return "Sem data";
 
-    setHistorico(listaAtualizada);
+    return new Date(data).toLocaleDateString("pt-BR");
+  }
+
+  if (carregando) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#0f7b3f" />
+        <Text style={styles.loadingText}>Carregando histórico...</Text>
+      </View>
+    );
   }
 
   return (
     <ScrollView style={styles.container}>
+      <Text style={styles.titulo}>Histórico de Serviços</Text>
 
-      <Text variant="headlineMedium" style={styles.titulo}>
-        Histórico
-      </Text>
+      <TextInput
+        style={styles.inputBusca}
+        placeholder="Pesquisar por cliente, CPF, placa ou veículo..."
+        value={busca}
+        onChangeText={setBusca}
+      />
 
-      {historico.length === 0 ? (
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text style={styles.textoVazio}>
-              Nenhum orçamento encontrado.
-            </Text>
-          </Card.Content>
-        </Card>
+      {servicosFiltrados.length === 0 ? (
+        <View style={styles.vazio}>
+          <Text style={styles.vazioTexto}>
+            Nenhum serviço finalizado encontrado.
+          </Text>
+        </View>
       ) : (
-        historico.map((item) => (
-          <TouchableRipple
-            key={item.id}
-            rippleColor="rgba(0,0,0,0.08)"
-            style={styles.ripple}
-          >
-
-            <Card style={styles.cardHistorico} mode="elevated">
-              <Card.Content>
-
-                <View style={styles.topoCard}>
-
+        servicosFiltrados.map((servico) => (
+          <Card key={servico.id} style={styles.card}>
+            <Card.Content>
+              <View style={styles.topoCard}>
+                <View>
                   <Text style={styles.nomeCliente}>
-                    {item.cliente}
+                    {servico.cliente?.nome || "Cliente não informado"}
                   </Text>
 
-                  <Chip
-                    style={
-                      item.status === "Finalizado"
-                        ? styles.chipFinalizado
-                        : styles.chipOrcamento
-                    }
-                    textStyle={styles.chipTexto}
-                  >
-                    {item.status}
-                  </Chip>
-
+                  <Text style={styles.info}>
+                    {servico.veiculo?.modelo || "Veículo não informado"} -{" "}
+                    {servico.veiculo?.placa || "Sem placa"}
+                  </Text>
                 </View>
 
-                <Text style={styles.info}>
-                  🚗 {item.carro}
-                </Text>
-
-                <Text style={styles.info}>
-                  🔖 {item.placa}
-                </Text>
-
-                <Text style={styles.info}>
-                  📅 {item.data}
-                </Text>
-
-                <Divider style={styles.divider} />
-
-                <Text style={styles.valor}>
-                  Valor: {formatarMoeda(item.valor)}
-                </Text>
-
-                <Text style={styles.lucro}>
-                  Lucro: {formatarMoeda(item.lucro)}
-                </Text>
-
-                <View style={styles.areaBotoes}>
-
-                  <Button
-                    mode="contained"
-                    style={styles.botaoAbrir}
-                  >
-                    Abrir
-                  </Button>
-
-                  <Button
-                    mode="contained"
-                    style={styles.botaoPdf}
-                  >
-                    PDF
-                  </Button>
-
-                  <Button
-                    mode="outlined"
-                    textColor="#b00020"
-                    style={styles.botaoExcluir}
-                    onPress={() => removerItem(item.id)}
-                  >
-                    Excluir
-                  </Button>
-
+                <View style={styles.statusBox}>
+                  <Text style={styles.statusTexto}>Finalizado</Text>
                 </View>
+              </View>
 
-              </Card.Content>
-            </Card>
+              <Divider style={styles.divider} />
 
-          </TouchableRipple>
+              <Text style={styles.label}>Descrição:</Text>
+              <Text style={styles.descricao}>
+                {servico.descricao || "Sem descrição"}
+              </Text>
+
+              <Text style={styles.info}>
+                Data início: {formatarData(servico.dataInicio)}
+              </Text>
+
+              <Text style={styles.info}>
+                Data fim: {formatarData(servico.dataFim)}
+              </Text>
+
+              <Text style={styles.total}>
+                Total: {formatarMoeda(servico.valorTotal || servico.valor)}
+              </Text>
+
+              <Button
+                mode="contained"
+                style={styles.botaoDetalhes}
+                buttonColor="#0f7b3f"
+                onPress={() =>
+                  navigation.navigate("DetalhesHistorico", {
+                    servicoId: servico.id,
+                  })
+                }
+              >
+                Ver detalhes
+              </Button>
+
+              <Button
+                mode="outlined"
+                textColor="#0f7b3f"
+                style={styles.botaoEditar}
+                onPress={() =>
+                  navigation.navigate("NovoOrcamento", {
+                    orcamento: servico,
+                    servicoId: servico.id,
+                    modoEdicao: true,
+                    origem: "historico",
+                  })
+                }
+              >
+                Editar
+              </Button>
+            </Card.Content>
+          </Card>
         ))
       )}
-
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: "#d8ccb3",
+    backgroundColor: "#f2f2f2",
     padding: 16,
   },
 
   titulo: {
-    color: "#0f5132",
+    fontSize: 24,
     fontWeight: "bold",
+    color: "#0f7b3f",
     marginBottom: 16,
-    marginTop: 10,
+    textAlign: "center",
   },
 
-  ripple: {
-    borderRadius: 20,
-    overflow: "hidden",
+  inputBusca: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
 
   card: {
-    borderRadius: 18,
+    marginBottom: 14,
+    borderRadius: 14,
     backgroundColor: "#fff",
-  },
-
-  cardHistorico: {
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    elevation: 5,
+    elevation: 3,
   },
 
   topoCard: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
+    alignItems: "flex-start",
+    gap: 10,
   },
 
   nomeCliente: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#0f5132",
-  },
-
-  chipFinalizado: {
-    backgroundColor: "#198754",
-  },
-
-  chipOrcamento: {
-    backgroundColor: "#ffc107",
-  },
-
-  chipTexto: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: "#222",
   },
 
   info: {
-    color: "#444",
-    marginBottom: 4,
-    fontSize: 15,
+    fontSize: 14,
+    color: "#555",
+    marginTop: 4,
+  },
+
+  statusBox: {
+    backgroundColor: "#d8f3dc",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+
+  statusTexto: {
+    color: "#0f7b3f",
+    fontWeight: "bold",
+    fontSize: 12,
   },
 
   divider: {
     marginVertical: 12,
   },
 
-  valor: {
-    fontSize: 18,
+  label: {
     fontWeight: "bold",
-    color: "#0f5132",
+    color: "#333",
+    marginBottom: 4,
   },
 
-  lucro: {
+  descricao: {
+    color: "#555",
+    marginBottom: 8,
+  },
+
+  total: {
+    marginTop: 10,
     fontSize: 17,
-    color: "#198754",
-    marginTop: 4,
     fontWeight: "bold",
+    color: "#0f7b3f",
   },
 
-  areaBotoes: {
-    marginTop: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 8,
+  botaoDetalhes: {
+    marginTop: 12,
+    borderRadius: 10,
   },
 
-  botaoAbrir: {
-    flex: 1,
-    backgroundColor: "#198754",
+  vazio: {
+    marginTop: 40,
+    alignItems: "center",
   },
 
-  botaoPdf: {
-    flex: 1,
-    backgroundColor: "#0f5132",
-  },
-
-  botaoExcluir: {
-    flex: 1,
-    borderColor: "#b00020",
-  },
-
-  textoVazio: {
+  vazioTexto: {
     color: "#777",
+    fontSize: 16,
   },
 
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f2f2f2",
+  },
+
+  loadingText: {
+    marginTop: 10,
+    color: "#555",
+  },
+
+  botaoEditar: {
+    marginTop: 8,
+    borderRadius: 10,
+    borderColor: "#0f7b3f",
+  },
 });

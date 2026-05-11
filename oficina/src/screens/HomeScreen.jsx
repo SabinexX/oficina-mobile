@@ -44,7 +44,7 @@ export default function HomeScreen({ navigation }) {
                 </Text>
 
                 <Text variant="bodyLarge" style={styles.subtitulo}>
-                    Sistema Mobile de Orçamentos
+                    Gestão Inteligente da Oficina
                 </Text>
             </View>
 
