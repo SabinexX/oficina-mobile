@@ -1,5 +1,17 @@
-import AppRoutes from "./src/routes/AppRoutes";
+import React from "react";
+
+import { NavigationContainer } from "@react-navigation/native";
+
+import { PaperProvider } from "react-native-paper";
+
+import TabRoutes from "./src/routes/TabRoutes";
 
 export default function App() {
-  return <AppRoutes />;
+  return (
+    <PaperProvider>
+      <NavigationContainer>
+        <TabRoutes />
+      </NavigationContainer>
+    </PaperProvider>
+  );
 }
