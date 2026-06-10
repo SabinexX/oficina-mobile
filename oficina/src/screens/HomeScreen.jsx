@@ -13,8 +13,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import api from "../api/api";
-
+import { apiOficina } from "../api/api";
 export default function HomeScreen({ navigation, telaTemporaria, titulo, descricao }) {
   const [servicos, setServicos] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
@@ -52,8 +51,8 @@ export default function HomeScreen({ navigation, telaTemporaria, titulo, descric
     try {
       setCarregando(true);
 
-      const servicosResponse = await api.get("/servicos");
-      const agendamentosResponse = await api.get("/agendamentos/proximos");
+      const servicosResponse = await apiOficina.get("/servicos");
+      const agendamentosResponse = await apiOficina.get("/agendamentos/proximos");
 
       setServicos(servicosResponse.data);
       setAgendamentos(agendamentosResponse.data.slice(0, 3));

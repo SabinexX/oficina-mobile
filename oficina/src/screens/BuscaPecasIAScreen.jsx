@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, View, Linking } from "react-native";
+import {
+    ScrollView,
+    StyleSheet,
+    View,
+    Linking,
+    Image,
+    Alert,
+    TouchableOpacity,
+    ActivityIndicator,
+} from "react-native";
 import {
     Text,
     Card,
@@ -8,68 +17,221 @@ import {
     Chip,
     Divider,
 } from "react-native-paper";
+import * as ImagePicker from "expo-image-picker";
+import { apiOficina, apiIA } from "../api/api";
 
 export default function BuscaPecasIAScreen() {
     const [placa, setPlaca] = useState("");
     const [peca, setPeca] = useState("");
     const [carroEncontrado, setCarroEncontrado] = useState(null);
     const [resultados, setResultados] = useState([]);
+    const [fotoPeca, setFotoPeca] = useState(null);
+    const [loadingVeiculo, setLoadingVeiculo] = useState(false);
+    const [loadingPeca, setLoadingPeca] = useState(false);
+    const [pecaIdentificada, setPecaIdentificada] = useState(null);
 
-    function buscarVeiculo() {
-        setCarroEncontrado({
-            placa: placa.toUpperCase(),
-            modelo: "Ford Ka",
-            motor: "1.5 3cc 12V Dragon",
-            ano: "2019",
-            combustivel: "Flex",
+    // ─── Câmera / Galeria ────────────────────────────────────────────────────
+
+    async function abrirCamera() {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert(
+                "Permissão negada",
+                "Precisamos de acesso à câmera para fotografar a peça."
+            );
+            return;
+        }
+
+        const resultado = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
         });
+
+        if (!resultado.canceled) {
+            setFotoPeca(resultado.assets[0].uri);
+            setPeca("");
+            setResultados([]);
+            setPecaIdentificada(null);
+        }
     }
 
-    function pesquisarPeca() {
-        setResultados([
-            {
-                id: "1",
-                tipo: "Mais em conta",
-                nome: `${peca} - Marca Econômica`,
-                marca: "Similar",
-                preco: "R$ 185,00",
-                loja: "Auto Peças Brasil",
-                link: "https://www.mercadolivre.com.br",
-            },
-            {
-                id: "2",
-                tipo: "Melhor qualidade",
-                nome: `${peca} - Marca Genuina`,
-                marca: "Original / Premium",
-                preco: "R$ 320,00",
-                loja: "Peças Online",
-                link: "https://www.mercadolivre.com.br/correia-dentada--tensor-fiesta-ka-eco-focus-15-16-sigma/up/MLBU3027998900?pdp_filters=item_id%3AMLB5293498778&from=gshop&matt_tool=99302748&matt_word=&matt_source=google&matt_campaign_id=22090193915&matt_ad_group_id=174661990484&matt_match_type=&matt_network=g&matt_device=c&matt_creative=727914181621&matt_keyword=&matt_ad_position=&matt_ad_type=pla&matt_merchant_id=5678056849&matt_product_id=MLBU3027998900&matt_product_partition_id=2389849241885&matt_target_id=aud-1966873223882:pla-2389849241885&cq_src=google_ads&cq_cmp=22090193915&cq_net=g&cq_plt=gp&cq_med=pla&gad_source=1&gad_campaignid=22090193915&gbraid=0AAAAAD93qcDwOeQmA9L7NWKAsjfn_JuEI&gclid=Cj0KCQjwk_bPBhDXARIsACiq8R2UFG-fniUayym4uDSQlEmFXa_otdy3sUph4wc-cXAXyXM9t9pVNkYaArAsEALw_wcB",
-            },
-            {
-                id: "3",
-                tipo: "Outra marca",
-                nome: `${peca} - Marca Alternativa`,
-                marca: "Paralela",
-                preco: "R$ 240,00",
-                loja: "Marketplace",
-                link: "https://www.mercadolivre.com.br",
-            },
-        ]);
+    async function abrirGaleria() {
+        const { status } =
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert(
+                "Permissão negada",
+                "Precisamos de acesso à galeria para selecionar uma foto."
+            );
+            return;
+        }
+
+        const resultado = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+        });
+
+        if (!resultado.canceled) {
+            setFotoPeca(resultado.assets[0].uri);
+            setPeca("");
+            setResultados([]);
+            setPecaIdentificada(null);
+        }
+    }
+
+    function removerFoto() {
+        setFotoPeca(null);
+        setPecaIdentificada(null);
+        setResultados([]);
+    }
+
+    // ─── API Real ─────────────────────────────────────────────────────────────
+
+    async function buscarVeiculo() {
+    if (!placa.trim()) {
+        Alert.alert("Atenção", "Digite a placa do veículo.");
+        return;
+    }
+
+    setLoadingVeiculo(true);
+    setCarroEncontrado(null);
+    setResultados([]);
+
+    try {
+        const { data } = await apiOficina.get("/veiculos");
+
+        const placaDigitada = placa.trim().toUpperCase().replace(/\s/g, "");
+
+        const veiculo = data.find(
+            (v) => v.placa?.toUpperCase().replace(/\s/g, "") === placaDigitada
+        );
+
+        if (!veiculo) {
+            Alert.alert("Não encontrado", "Nenhum veículo cadastrado com essa placa.");
+            return;
+        }
+
+        setCarroEncontrado({
+            placa: veiculo.placa,
+            marca: veiculo.marca,
+            modelo: veiculo.modelo,
+            ano: veiculo.ano,
+            motor: veiculo.motor,
+            cor: veiculo.cor,
+        });
+
+    } catch (err) {
+        Alert.alert("Erro", "Não foi possível buscar os veículos.");
+    } finally {
+        setLoadingVeiculo(false);
+    }
+}
+
+    async function pesquisarPeca() {
+        if (!peca.trim() && !fotoPeca) {
+            Alert.alert(
+                "Atenção",
+                "Digite o nome da peça ou tire uma foto dela."
+            );
+            return;
+        }
+
+        setLoadingPeca(true);
+        setResultados([]);
+        setPecaIdentificada(null);
+
+        try {
+            let data;
+
+            if (fotoPeca) {
+                // Busca por foto (IA Vision)
+                const formData = new FormData();
+                formData.append("image", {
+                    uri: fotoPeca,
+                    name: "peca.jpg",
+                    type: "image/jpeg",
+                });
+                if (carroEncontrado?.marca)
+                    formData.append("vehicle_brand", carroEncontrado.marca);
+                if (carroEncontrado?.modelo)
+                    formData.append("vehicle_model", carroEncontrado.modelo);
+                if (carroEncontrado?.ano)
+                    formData.append(
+                        "vehicle_year",
+                        String(carroEncontrado.ano)
+                    );
+                if (placa.trim())
+                    formData.append(
+                        "vehicle_plate",
+                        placa.trim().toUpperCase()
+                    );
+
+                const resp = await apiIA.post(
+                    "/api/v1/search/by-image",
+                    formData,
+                    { headers: { "Content-Type": "multipart/form-data" } }
+                );
+                data = resp.data;
+                setPecaIdentificada(data.part);
+            } else {
+                // Busca por texto
+                const query = encodeURIComponent(peca.trim());
+                const resp = await apiIA.post(
+                    `/api/v1/search/by-text?query=${query}`,
+                    {
+                        vehicle_brand: carroEncontrado?.marca,
+                        vehicle_model: carroEncontrado?.modelo,
+                        vehicle_year: carroEncontrado?.ano
+                            ? Number(carroEncontrado.ano)
+                            : undefined,
+                    }
+                );
+                data = resp.data;
+                setPecaIdentificada(data.part);
+            }
+
+            setResultados(data.offers || []);
+
+            if (!data.offers || data.offers.length === 0) {
+                Alert.alert("Sem resultados", "Nenhuma oferta encontrada para essa peça.");
+            }
+        } catch (err) {
+            Alert.alert(
+                "Erro na busca",
+                "Não foi possível conectar à IA. Verifique se o servidor está rodando."
+            );
+        } finally {
+            setLoadingPeca(false);
+        }
     }
 
     function abrirLink(link) {
         Linking.openURL(link);
     }
 
+    function formatarPreco(preco) {
+        if (!preco) return "—";
+        return `R$ ${Number(preco).toFixed(2).replace(".", ",")}`;
+    }
+
+    // ─── Render ───────────────────────────────────────────────────────────────
+
     return (
         <ScrollView style={styles.container}>
+            {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.titulo}>Busca Inteligente de Peças</Text>
                 <Text style={styles.subtitulo}>
-                    Simulação da tela com IA para encontrar peças pela placa do veículo.
+                    Use a IA para encontrar peças pela placa do veículo ou foto
+                    da peça.
                 </Text>
             </View>
 
+            {/* Card: consulta de veículo */}
             <Card style={styles.card}>
                 <Card.Content>
                     <Text style={styles.cardTitulo}>1. Consultar veículo</Text>
@@ -88,33 +250,99 @@ export default function BuscaPecasIAScreen() {
                         onPress={buscarVeiculo}
                         buttonColor="#0f5132"
                         style={styles.botao}
+                        disabled={loadingVeiculo}
                     >
-                        Buscar dados do veículo
+                        {loadingVeiculo ? "Buscando..." : "Buscar dados do veículo"}
                     </Button>
+
+                    {loadingVeiculo && (
+                        <ActivityIndicator
+                            color="#0f5132"
+                            style={{ marginTop: 12 }}
+                        />
+                    )}
                 </Card.Content>
             </Card>
 
+            {/* Card: veículo encontrado */}
             {carroEncontrado && (
                 <Card style={styles.cardVeiculo}>
                     <Card.Content>
                         <Text style={styles.cardTitulo}>Veículo encontrado</Text>
-
                         <Text style={styles.info}>Placa: {carroEncontrado.placa}</Text>
+                        <Text style={styles.info}>Marca: {carroEncontrado.marca}</Text>
                         <Text style={styles.info}>Modelo: {carroEncontrado.modelo}</Text>
-                        <Text style={styles.info}>Motor: {carroEncontrado.motor}</Text>
                         <Text style={styles.info}>Ano: {carroEncontrado.ano}</Text>
-                        <Text style={styles.info}>
-                            Combustível: {carroEncontrado.combustivel}
-                        </Text>
+                        {carroEncontrado.cor && (
+                            <Text style={styles.info}>Cor: {carroEncontrado.cor}</Text>
+                        )}
+                        {carroEncontrado.municipio && (
+                            <Text style={styles.info}>Município: {carroEncontrado.municipio}</Text>
+                        )}
                     </Card.Content>
                 </Card>
             )}
 
+            {/* Card: pesquisa de peça */}
             {carroEncontrado && (
                 <Card style={styles.card}>
                     <Card.Content>
                         <Text style={styles.cardTitulo}>2. Pesquisar peça</Text>
 
+                        {/* Seção de foto */}
+                        <Text style={styles.labelSecao}>
+                            📷 Fotografar a peça (opcional)
+                        </Text>
+
+                        {fotoPeca ? (
+                            <View style={styles.previewContainer}>
+                                <Image
+                                    source={{ uri: fotoPeca }}
+                                    style={styles.previewImagem}
+                                    resizeMode="cover"
+                                />
+                                <TouchableOpacity
+                                    style={styles.botaoRemoverFoto}
+                                    onPress={removerFoto}
+                                >
+                                    <Text style={styles.textoRemoverFoto}>
+                                        ✕ Remover foto
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={styles.botoesCamera}>
+                                <Button
+                                    mode="outlined"
+                                    onPress={abrirCamera}
+                                    textColor="#0f5132"
+                                    style={styles.botaoCamera}
+                                    icon="camera"
+                                >
+                                    Câmera
+                                </Button>
+                                <Button
+                                    mode="outlined"
+                                    onPress={abrirGaleria}
+                                    textColor="#0f5132"
+                                    style={styles.botaoCamera}
+                                    icon="image"
+                                >
+                                    Galeria
+                                </Button>
+                            </View>
+                        )}
+
+                        {/* Divisor "ou" */}
+                        <View style={styles.ouContainer}>
+                            <View style={styles.linhaOu} />
+                            <Text style={styles.textoOu}>
+                                {fotoPeca ? "ou adicione o nome também" : "ou"}
+                            </Text>
+                            <View style={styles.linhaOu} />
+                        </View>
+
+                        {/* Campo de texto */}
                         <TextInput
                             label="Ex: kit correia dentada, filtro de óleo..."
                             value={peca}
@@ -128,35 +356,82 @@ export default function BuscaPecasIAScreen() {
                             onPress={pesquisarPeca}
                             buttonColor="#198754"
                             style={styles.botao}
+                            icon="magnify"
+                            disabled={loadingPeca}
                         >
-                            Procurar peça com IA
+                            {loadingPeca ? "Buscando com IA..." : "Procurar peça com IA"}
                         </Button>
+
+                        {loadingPeca && (
+                            <ActivityIndicator
+                                color="#198754"
+                                style={{ marginTop: 12 }}
+                            />
+                        )}
                     </Card.Content>
                 </Card>
             )}
 
+            {/* Peça identificada pela IA (quando vier da foto) */}
+            {pecaIdentificada && (
+                <Card style={styles.cardPecaIA}>
+                    <Card.Content>
+                        <Text style={styles.cardTitulo}>🤖 Peça identificada pela IA</Text>
+                        <Text style={styles.info}>Nome: {pecaIdentificada.name}</Text>
+                        {pecaIdentificada.brand && (
+                            <Text style={styles.info}>Marca: {pecaIdentificada.brand}</Text>
+                        )}
+                        {pecaIdentificada.part_number && (
+                            <Text style={styles.info}>Part number: {pecaIdentificada.part_number}</Text>
+                        )}
+                        {pecaIdentificada.confidence && (
+                            <Text style={styles.info}>
+                                Confiança: {Math.round(pecaIdentificada.confidence * 100)}%
+                            </Text>
+                        )}
+                    </Card.Content>
+                </Card>
+            )}
+
+            {/* Resultados */}
             {resultados.length > 0 && (
                 <View style={styles.resultadosArea}>
-                    <Text style={styles.resultadosTitulo}>Resultados encontrados</Text>
+                    <Text style={styles.resultadosTitulo}>
+                        {resultados.length} resultado{resultados.length > 1 ? "s" : ""} encontrado{resultados.length > 1 ? "s" : ""}
+                    </Text>
 
-                    {resultados.map((item) => (
-                        <Card key={item.id} style={styles.cardResultado}>
+                    {resultados.map((item, index) => (
+                        <Card key={item.id || index} style={styles.cardResultado}>
                             <Card.Content>
                                 <View style={styles.linhaTopo}>
-                                    <Chip style={styles.chip}>{item.tipo}</Chip>
+                                    <Chip style={styles.chip}>
+                                        {item.seller_reputation
+                                            ? item.seller_reputation.toUpperCase()
+                                            : `#${index + 1}`}
+                                    </Chip>
+                                    {item.score && (
+                                        <Chip style={[styles.chip, { marginLeft: 8 }]}>
+                                            Score: {(item.score * 100).toFixed(0)}%
+                                        </Chip>
+                                    )}
                                 </View>
 
-                                <Text style={styles.nomePeca}>{item.nome}</Text>
+                                <Text style={styles.nomePeca}>{item.title}</Text>
 
                                 <Divider style={styles.divisor} />
 
-                                <Text style={styles.info}>Marca: {item.marca}</Text>
-                                <Text style={styles.info}>Loja: {item.loja}</Text>
-                                <Text style={styles.preco}>{item.preco}</Text>
+                                {item.seller_name && (
+                                    <Text style={styles.info}>Loja: {item.seller_name}</Text>
+                                )}
+                                {item.total_price && (
+                                    <Text style={styles.preco}>
+                                        {formatarPreco(item.total_price)}
+                                    </Text>
+                                )}
 
                                 <Button
                                     mode="contained"
-                                    onPress={() => abrirLink(item.link)}
+                                    onPress={() => abrirLink(item.url)}
                                     buttonColor="#0f5132"
                                     style={styles.botaoComprar}
                                 >
@@ -210,6 +485,13 @@ const styles = StyleSheet.create({
         backgroundColor: "#e9f7ef",
     },
 
+    cardPecaIA: {
+        marginHorizontal: 20,
+        marginBottom: 20,
+        borderRadius: 20,
+        backgroundColor: "#e8f4fd",
+    },
+
     cardTitulo: {
         color: "#0f5132",
         fontSize: 19,
@@ -233,6 +515,70 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
 
+    // Câmera
+    labelSecao: {
+        fontSize: 15,
+        color: "#0f5132",
+        fontWeight: "600",
+        marginBottom: 10,
+    },
+
+    botoesCamera: {
+        flexDirection: "row",
+        gap: 10,
+        marginBottom: 4,
+    },
+
+    botaoCamera: {
+        flex: 1,
+        borderColor: "#0f5132",
+        borderRadius: 12,
+    },
+
+    previewContainer: {
+        alignItems: "center",
+        marginBottom: 4,
+    },
+
+    previewImagem: {
+        width: "100%",
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+
+    botaoRemoverFoto: {
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        backgroundColor: "#f8d7da",
+        borderRadius: 8,
+    },
+
+    textoRemoverFoto: {
+        color: "#842029",
+        fontWeight: "600",
+        fontSize: 13,
+    },
+
+    ouContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginVertical: 14,
+    },
+
+    linhaOu: {
+        flex: 1,
+        height: 1,
+        backgroundColor: "#ccc",
+    },
+
+    textoOu: {
+        marginHorizontal: 10,
+        color: "#888",
+        fontSize: 13,
+    },
+
+    // Resultados
     resultadosArea: {
         paddingHorizontal: 20,
         paddingBottom: 30,

@@ -1,8 +1,13 @@
-import axios from "axios";
+import axios from 'axios';
 
-const api = axios.create({
-  baseURL: "http://192.168.101.134:8080",
-  timeout: 20000,
+const MEU_IP = '192.168.0.175';
+
+export const apiOficina = axios.create({
+  baseURL: `http://${MEU_IP}:8080`,
 });
 
-export default api;
+export const apiIA = axios.create({
+  baseURL: `http://${MEU_IP}:8000`,
+});
+
+

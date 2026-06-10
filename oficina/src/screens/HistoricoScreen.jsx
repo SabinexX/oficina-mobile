@@ -9,8 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Card, Button, Divider } from "react-native-paper";
-import api from "../api/api";
-
+import { apiOficina } from "../api/api";
 export default function HistoricoScreen({ navigation }) {
   const [servicos, setServicos] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -24,7 +23,7 @@ export default function HistoricoScreen({ navigation }) {
     try {
       setCarregando(true);
 
-      const resposta = await api.get("/servicos");
+      const resposta = await apiOficina.get("/servicos");
 
       const finalizados = resposta.data.filter(
         (servico) => servico.status === "SERVICO_FINALIZADO"

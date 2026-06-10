@@ -8,12 +8,11 @@ import {
   StyleSheet,
   Alert,
   Keyboard,
-  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 
-import api from "../api/api";
+import { apiOficina } from "../api/api";
 
 export default function ClientesScreen() {
   const [clientes, setClientes] = useState([]);
@@ -33,10 +32,21 @@ export default function ClientesScreen() {
 
   async function carregarClientes() {
     try {
-      const response = await api.get("/clientes");
+      const response = await apiOficina.get("/clientes");
       setClientes(response.data);
     } catch (error) {
-      console.log("Erro ao buscar clientes:", error);
+      console.log("ERRO COMPLETO:");
+      console.log(error);
+
+      console.log("STATUS:");
+      console.log(error.response?.status);
+
+      console.log("DATA:");
+      console.log(error.response?.data);
+
+      console.log("MESSAGE:");
+      console.log(error.message);
+
       Alert.alert("Erro", "Não foi possível carregar os clientes.");
     }
   }
@@ -91,23 +101,40 @@ export default function ClientesScreen() {
       };
 
       if (clienteEditando) {
-        await api.put(`/clientes/${clienteEditando.id}`, dadosCliente);
+        await apiOficina.put(
+          `/clientes/${clienteEditando.id}`,
+          dadosCliente
+        );
+
         Alert.alert("Sucesso", "Cliente atualizado com sucesso.");
       } else {
-        await api.post("/clientes", dadosCliente);
+        await apiOficina.post("/clientes", dadosCliente);
+
         Alert.alert("Sucesso", "Cliente cadastrado com sucesso.");
       }
 
       limparFormulario();
       carregarClientes();
     } catch (error) {
-      console.log("Erro ao salvar cliente:", error);
+      console.log("ERRO COMPLETO:");
+      console.log(error);
+
+      console.log("STATUS:");
+      console.log(error.response?.status);
+
+      console.log("DATA:");
+      console.log(error.response?.data);
+
+      console.log("MESSAGE:");
+      console.log(error.message);
+
       Alert.alert("Erro", "Não foi possível salvar o cliente.");
     }
   }
 
   function editarCliente(cliente) {
     setClienteEditando(cliente);
+
     setNome(cliente.nome || "");
     setTelefone(cliente.telefone || "");
     setCpf(cliente.cpf || "");
@@ -133,11 +160,14 @@ export default function ClientesScreen() {
 
   async function deletarCliente(id) {
     try {
-      await api.delete(`/clientes/${id}`);
+      await apiOficina.delete(`/clientes/${id}`);
+
       carregarClientes();
+
       Alert.alert("Sucesso", "Cliente removido com sucesso.");
     } catch (error) {
       console.log("Erro ao deletar cliente:", error);
+
       Alert.alert("Erro", "Não foi possível deletar o cliente.");
     }
   }
@@ -159,7 +189,9 @@ export default function ClientesScreen() {
 
         <View style={styles.formulario}>
           <Text style={styles.subtitulo}>
-            {clienteEditando ? "Editar cliente" : "Cadastrar novo cliente"}
+            {clienteEditando
+              ? "Editar cliente"
+              : "Cadastrar novo cliente"}
           </Text>
 
           <TextInput
@@ -185,9 +217,14 @@ export default function ClientesScreen() {
             keyboardType="numeric"
           />
 
-          <TouchableOpacity style={styles.botaoCadastrar} onPress={salvarCliente}>
+          <TouchableOpacity
+            style={styles.botaoCadastrar}
+            onPress={salvarCliente}
+          >
             <Text style={styles.textoBotao}>
-              {clienteEditando ? "Salvar Alterações" : "Cadastrar Cliente"}
+              {clienteEditando
+                ? "Salvar Alterações"
+                : "Cadastrar Cliente"}
             </Text>
           </TouchableOpacity>
 
@@ -196,7 +233,9 @@ export default function ClientesScreen() {
               style={styles.botaoCancelar}
               onPress={limparFormulario}
             >
-              <Text style={styles.textoCancelar}>Cancelar edição</Text>
+              <Text style={styles.textoCancelar}>
+                Cancelar edição
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -235,56 +274,72 @@ export default function ClientesScreen() {
       style={styles.tela}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
-          <FlatList
-            data={mostrarPesquisa ? clientesFiltrados : clientes}
-            keyExtractor={(item) => item.id}
-            ListHeaderComponent={renderCabecalho}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.lista}
-            ListEmptyComponent={
-              <Text style={styles.textoVazio}>Nenhum cliente encontrado.</Text>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <View style={styles.cardTopo}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarTexto}>
-                      {item.nome ? item.nome.charAt(0).toUpperCase() : "C"}
-                    </Text>
-                  </View>
+      <View style={styles.container}>
 
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.nome}>{item.nome}</Text>
-                    <Text style={styles.info}>Telefone: {item.telefone}</Text>
-                    <Text style={styles.info}>
-                      CPF: {item.cpf ? item.cpf : "Não informado"}
-                    </Text>
-                  </View>
+        {renderCabecalho()}
+
+        <FlatList
+          data={mostrarPesquisa ? clientesFiltrados : clientes}
+          keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.lista}
+          ListEmptyComponent={
+            <Text style={styles.textoVazio}>
+              Nenhum cliente encontrado.
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View style={styles.cardTopo}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarTexto}>
+                    {item.nome
+                      ? item.nome.charAt(0).toUpperCase()
+                      : "C"}
+                  </Text>
                 </View>
 
-                <View style={styles.areaBotoesCard}>
-                  <TouchableOpacity
-                    style={styles.botaoEditar}
-                    onPress={() => editarCliente(item)}
-                  >
-                    <Text style={styles.textoEditar}>Editar</Text>
-                  </TouchableOpacity>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.nome}>{item.nome}</Text>
 
-                  <TouchableOpacity
-                    style={styles.botaoExcluir}
-                    onPress={() => confirmarExcluir(item)}
-                  >
-                    <Text style={styles.textoExcluir}>Excluir</Text>
-                  </TouchableOpacity>
+                  <Text style={styles.info}>
+                    Telefone: {item.telefone}
+                  </Text>
+
+                  <Text style={styles.info}>
+                    CPF:{" "}
+                    {item.cpf
+                      ? item.cpf
+                      : "Não informado"}
+                  </Text>
                 </View>
               </View>
-            )}
-          />
-        </View>
-      </TouchableWithoutFeedback>
+
+              <View style={styles.areaBotoesCard}>
+                <TouchableOpacity
+                  style={styles.botaoEditar}
+                  onPress={() => editarCliente(item)}
+                >
+                  <Text style={styles.textoEditar}>
+                    Editar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.botaoExcluir}
+                  onPress={() => confirmarExcluir(item)}
+                >
+                  <Text style={styles.textoExcluir}>
+                    Excluir
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        />
+
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -299,10 +354,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#d8ccb3",
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
 
   lista: {
-    paddingTop: 20,
     paddingBottom: 50,
   },
 

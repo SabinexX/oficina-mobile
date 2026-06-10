@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Card, Divider, Button } from "react-native-paper";
-import api from "../api/api";
+import { apiOficina } from "../api/api";
 import { gerarPdfCliente, gerarPdfInterno } from "../utils/gerarPdfServico";
 
 export default function DetalhesHistoricoScreen({ route, navigation }) {
@@ -23,7 +23,7 @@ export default function DetalhesHistoricoScreen({ route, navigation }) {
   async function carregarDetalhes() {
     try {
       setCarregando(true);
-      const resposta = await api.get(`/servicos/${servicoId}`);
+      const resposta = await apiOficina.get(`/servicos/${servicoId}`);
       setServico(resposta.data);
     } catch (erro) {
       console.log("Erro ao carregar detalhes:", erro);

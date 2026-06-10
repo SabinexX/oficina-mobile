@@ -10,7 +10,7 @@ import { Text, Card, Chip, Button, Divider } from "react-native-paper";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 
-import api from "../api/api";
+import { apiOficina } from "../api/api";;
 
 const TopTab = createMaterialTopTabNavigator();
 
@@ -41,7 +41,7 @@ function ListaServicos({ navigation, status, titulo, vazio }) {
   async function carregarServicos() {
     try {
       setCarregando(true);
-      const response = await api.get("/servicos");
+      const response = await apiOficina.get("/servicos");
 
       const filtrados = response.data
         .filter((item) => item.status === status)

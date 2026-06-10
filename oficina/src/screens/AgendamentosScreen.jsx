@@ -23,8 +23,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-import api from "../api/api";
-
+import { apiOficina } from "../api/api";
 export default function AgendamentosScreen() {
   const [agendamentos, setAgendamentos] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -52,9 +51,9 @@ export default function AgendamentosScreen() {
     try {
       setCarregando(true);
 
-      const agendamentosResponse = await api.get("/agendamentos/proximos");
-      const clientesResponse = await api.get("/clientes");
-      const veiculosResponse = await api.get("/veiculos");
+      const agendamentosResponse = await apiOficina.get("/agendamentos/proximos");
+      const clientesResponse = await apiOficina.get("/clientes");
+      const veiculosResponse = await apiOficina.get("/veiculos");
 
       setAgendamentos(agendamentosResponse.data);
       setClientes(clientesResponse.data);
@@ -146,7 +145,7 @@ export default function AgendamentosScreen() {
     }
 
     try {
-      await api.post("/agendamentos", {
+      await apiOficina.post("/agendamentos", {
         descricao,
         dataHora: dataHora.toISOString(),
         cliente: {
@@ -172,7 +171,7 @@ export default function AgendamentosScreen() {
 
   async function alterarStatus(id, status) {
     try {
-      await api.put(`/agendamentos/${id}/status`, null, {
+      await apiOficina.put(`/agendamentos/${id}/status`, null, {
         params: {
           status,
         },

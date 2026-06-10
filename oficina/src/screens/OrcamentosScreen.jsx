@@ -11,8 +11,7 @@ import {
     TouchableRipple,
 } from "react-native-paper";
 
-import api from "../api/api";
-
+import { apiOficina } from "../api/api";
 export default function OrcamentosScreen({ navigation }) {
     const [servicos, setServicos] = useState([]);
 
@@ -24,7 +23,7 @@ export default function OrcamentosScreen({ navigation }) {
 
     async function carregarServicos() {
         try {
-            const response = await api.get("/servicos");
+            const response = await apiOficina.get("/servicos");
 
             // Aqui remove da tela de Orçamentos tudo que já foi finalizado
             const listaSemFinalizados = response.data.filter(
@@ -67,7 +66,7 @@ export default function OrcamentosScreen({ navigation }) {
 
     async function alterarStatus(id, novoStatus) {
         try {
-            await api.put(`/servicos/${id}/status`, null, {
+            await apiOficina.put(`/servicos/${id}/status`, null, {
                 params: {
                     status: novoStatus,
                 },
@@ -131,7 +130,7 @@ export default function OrcamentosScreen({ navigation }) {
 
     async function deletarServico(id) {
         try {
-            await api.delete(`/servicos/${id}`);
+            await apiOficina.delete(`/servicos/${id}`);
             carregarServicos();
         } catch (error) {
             console.log(error);

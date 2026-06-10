@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,11 @@ import {
   StyleSheet,
   Alert,
   Keyboard,
-  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 
-import api from "../api/api";
+import { apiOficina } from "../api/api";
 
 export default function CarrosScreen() {
   const [carros, setCarros] = useState([]);
@@ -38,8 +37,8 @@ export default function CarrosScreen() {
 
   async function carregarDados() {
     try {
-      const carrosResponse = await api.get("/veiculos");
-      const clientesResponse = await api.get("/clientes");
+      const carrosResponse = await apiOficina.get("/veiculos");
+      const clientesResponse = await apiOficina.get("/clientes");
 
       setCarros(carrosResponse.data);
       setClientes(clientesResponse.data);
@@ -74,7 +73,6 @@ export default function CarrosScreen() {
   function selecionarCliente(cliente) {
     setClienteSelecionado(cliente);
     setPesquisaCliente(cliente.nome || "");
-    Keyboard.dismiss();
   }
 
   function placaDuplicada() {
@@ -118,10 +116,10 @@ export default function CarrosScreen() {
       };
 
       if (carroEditando) {
-        await api.put(`/veiculos/${carroEditando.id}`, dadosCarro);
+        await apiOficina.put(`/veiculos/${carroEditando.id}`, dadosCarro);
         Alert.alert("Sucesso", "Carro atualizado com sucesso.");
       } else {
-        await api.post("/veiculos", dadosCarro);
+        await apiOficina.post("/veiculos", dadosCarro);
         Alert.alert("Sucesso", "Carro cadastrado com sucesso.");
       }
 
@@ -135,6 +133,7 @@ export default function CarrosScreen() {
 
   function editarCarro(carro) {
     setCarroEditando(carro);
+
     setMarca(carro.marca || "");
     setModelo(carro.modelo || "");
     setPlaca(carro.placa || "");
@@ -166,8 +165,9 @@ export default function CarrosScreen() {
 
   async function deletarCarro(id) {
     try {
-      await api.delete(`/veiculos/${id}`);
+      await apiOficina.delete(`/veiculos/${id}`);
       carregarDados();
+
       Alert.alert("Sucesso", "Carro removido com sucesso.");
     } catch (error) {
       console.log("Erro ao deletar carro:", error);
@@ -187,7 +187,7 @@ export default function CarrosScreen() {
     );
   });
 
-  function renderCabecalho() {
+  const cabecalho = useMemo(() => {
     return (
       <>
         <Text style={styles.titulo}>Carros</Text>
@@ -241,7 +241,9 @@ export default function CarrosScreen() {
           {!clienteSelecionado && pesquisaCliente.length > 0 && (
             <View style={styles.listaClientes}>
               {clientesFiltrados.length === 0 ? (
-                <Text style={styles.textoVazio}>Nenhum cliente encontrado.</Text>
+                <Text style={styles.textoVazio}>
+                  Nenhum cliente encontrado.
+                </Text>
               ) : (
                 clientesFiltrados.map((cliente) => (
                   <TouchableOpacity
@@ -249,9 +251,13 @@ export default function CarrosScreen() {
                     style={styles.itemCliente}
                     onPress={() => selecionarCliente(cliente)}
                   >
-                    <Text style={styles.itemClienteNome}>{cliente.nome}</Text>
+                    <Text style={styles.itemClienteNome}>
+                      {cliente.nome}
+                    </Text>
+
                     <Text style={styles.itemClienteInfo}>
-                      {cliente.telefone} {cliente.cpf ? `- ${cliente.cpf}` : ""}
+                      {cliente.telefone}
+                      {cliente.cpf ? ` - ${cliente.cpf}` : ""}
                     </Text>
                   </TouchableOpacity>
                 ))
@@ -272,14 +278,21 @@ export default function CarrosScreen() {
                   setPesquisaCliente("");
                 }}
               >
-                <Text style={styles.textoTrocarCliente}>Trocar cliente</Text>
+                <Text style={styles.textoTrocarCliente}>
+                  Trocar cliente
+                </Text>
               </TouchableOpacity>
             </View>
           )}
 
-          <TouchableOpacity style={styles.botaoCadastrar} onPress={salvarCarro}>
+          <TouchableOpacity
+            style={styles.botaoCadastrar}
+            onPress={salvarCarro}
+          >
             <Text style={styles.textoBotao}>
-              {carroEditando ? "Salvar Alterações" : "Cadastrar Carro"}
+              {carroEditando
+                ? "Salvar Alterações"
+                : "Cadastrar Carro"}
             </Text>
           </TouchableOpacity>
 
@@ -288,7 +301,9 @@ export default function CarrosScreen() {
               style={styles.botaoCancelar}
               onPress={limparFormulario}
             >
-              <Text style={styles.textoCancelar}>Cancelar edição</Text>
+              <Text style={styles.textoCancelar}>
+                Cancelar edição
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -298,7 +313,9 @@ export default function CarrosScreen() {
           onPress={() => setMostrarPesquisa(!mostrarPesquisa)}
         >
           <Text style={styles.textoBotao}>
-            {mostrarPesquisa ? "Fechar pesquisa" : "Pesquisar carros cadastrados"}
+            {mostrarPesquisa
+              ? "Fechar pesquisa"
+              : "Pesquisar carros cadastrados"}
           </Text>
         </TouchableOpacity>
 
@@ -309,77 +326,92 @@ export default function CarrosScreen() {
               placeholder="Pesquisar por placa, marca, modelo, cor ou cliente"
               value={pesquisa}
               onChangeText={setPesquisa}
-              autoCapitalize="characters"
             />
           </View>
         )}
 
         <Text style={styles.contadorCarros}>
-          Carros cadastrados: {(mostrarPesquisa ? carrosFiltrados : carros).length}
+          Carros cadastrados:{" "}
+          {(mostrarPesquisa ? carrosFiltrados : carros).length}
         </Text>
       </>
     );
-  }
+  }, [
+    marca,
+    modelo,
+    placa,
+    cor,
+    pesquisaCliente,
+    clienteSelecionado,
+    clientesFiltrados,
+    mostrarPesquisa,
+    pesquisa,
+    carrosFiltrados,
+    carros,
+    carroEditando,
+  ]);
 
   return (
     <KeyboardAvoidingView
       style={styles.tela}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
-          <FlatList
-            data={mostrarPesquisa ? carrosFiltrados : carros}
-            keyExtractor={(item) => item.id}
-            ListHeaderComponent={renderCabecalho}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.lista}
-            ListEmptyComponent={
-              <Text style={styles.textoVazio}>Nenhum carro encontrado.</Text>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <View style={styles.cardTopo}>
-                  <View style={styles.placaBox}>
-                    <Text style={styles.placaTexto}>{item.placa || "SEM PLACA"}</Text>
-                  </View>
-
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.nomeCarro}>
-                      {item.marca} {item.modelo}
-                    </Text>
-
-                    <Text style={styles.info}>
-                      Cor: {item.cor ? item.cor : "Não informada"}
-                    </Text>
-
-                    <Text style={styles.info}>
-                      Cliente: {item.cliente?.nome || "Não informado"}
-                    </Text>
-                  </View>
+      <View style={styles.container}>
+        <FlatList
+          data={mostrarPesquisa ? carrosFiltrados : carros}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={cabecalho}
+          keyboardShouldPersistTaps="always"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.lista}
+          ListEmptyComponent={
+            <Text style={styles.textoVazio}>
+              Nenhum carro encontrado.
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View style={styles.cardTopo}>
+                <View style={styles.placaBox}>
+                  <Text style={styles.placaTexto}>
+                    {item.placa || "SEM PLACA"}
+                  </Text>
                 </View>
 
-                <View style={styles.areaBotoesCard}>
-                  <TouchableOpacity
-                    style={styles.botaoEditar}
-                    onPress={() => editarCarro(item)}
-                  >
-                    <Text style={styles.textoEditar}>Editar</Text>
-                  </TouchableOpacity>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.nomeCarro}>
+                    {item.marca} {item.modelo}
+                  </Text>
 
-                  <TouchableOpacity
-                    style={styles.botaoExcluir}
-                    onPress={() => confirmarExcluir(item)}
-                  >
-                    <Text style={styles.textoExcluir}>Excluir</Text>
-                  </TouchableOpacity>
+                  <Text style={styles.info}>
+                    Cor: {item.cor ? item.cor : "Não informada"}
+                  </Text>
+
+                  <Text style={styles.info}>
+                    Cliente: {item.cliente?.nome || "Não informado"}
+                  </Text>
                 </View>
               </View>
-            )}
-          />
-        </View>
-      </TouchableWithoutFeedback>
+
+              <View style={styles.areaBotoesCard}>
+                <TouchableOpacity
+                  style={styles.botaoEditar}
+                  onPress={() => editarCarro(item)}
+                >
+                  <Text style={styles.textoEditar}>Editar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.botaoExcluir}
+                  onPress={() => confirmarExcluir(item)}
+                >
+                  <Text style={styles.textoExcluir}>Excluir</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }

@@ -17,7 +17,7 @@ import {
     SegmentedButtons,
     Divider,
 } from "react-native-paper";
-import api from "../api/api";
+import { apiOficina } from "../api/api";
 import {
     gerarPdfCliente,
     gerarPdfInterno,
@@ -77,8 +77,8 @@ export default function NovoOrcamentoScreen({ route, navigation }) {
 
     async function carregarDados() {
         try {
-            const clientesResponse = await api.get("/clientes");
-            const veiculosResponse = await api.get("/veiculos");
+            const clientesResponse = await apiOficina.get("/clientes");
+            const veiculosResponse = await apiOficina.get("/veiculos");
 
             setClientes(clientesResponse.data);
             setVeiculos(veiculosResponse.data);
@@ -296,11 +296,11 @@ export default function NovoOrcamentoScreen({ route, navigation }) {
             };
 
             if (modoEdicao) {
-                await api.put(`/servicos/${orcamentoEdicao.id}`, servico);
+                await apiOficina.put(`/servicos/${orcamentoEdicao.id}`, servico);
 
                 Alert.alert("Sucesso", "Orçamento atualizado com sucesso.");
             } else {
-                await api.post("/servicos", servico);
+                await apiOficina.post("/servicos", servico);
 
                 Alert.alert("Sucesso", "Orçamento salvo como pendente.");
             }
@@ -312,7 +312,16 @@ export default function NovoOrcamentoScreen({ route, navigation }) {
 
             Keyboard.dismiss();
 
-            navigation.navigate("Orcamentos");
+            Alert.alert(
+    "Sucesso",
+    modoEdicao ? "Orçamento atualizado com sucesso." : "Orçamento salvo como pendente.",
+    [
+        {
+            text: "OK",
+            onPress: () => navigation.navigate("Oficina", { screen: "OficinaHome" }),
+        },
+    ]
+);
         } catch (error) {
             console.log(error);
             Alert.alert("Erro", "Não foi possível salvar o orçamento.");
