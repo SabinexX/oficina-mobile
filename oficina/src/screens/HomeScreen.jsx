@@ -12,6 +12,7 @@ import { Text, Card, Divider } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 
 import { apiOficina } from "../api/api";
 export default function HomeScreen({ navigation, telaTemporaria, titulo, descricao }) {
@@ -90,6 +91,7 @@ export default function HomeScreen({ navigation, telaTemporaria, titulo, descric
   }
 
   return (
+
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
@@ -339,13 +341,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#d8ccb3",
   },
 
-  header: {
-    paddingTop: 44,
-    paddingBottom: 84,
-    paddingHorizontal: 22,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
-  },
+header: {
+  marginTop: -60,
+  paddingTop: 120,
+  paddingBottom: 84,
+  paddingHorizontal: 22,
+  borderBottomLeftRadius: 36,
+  borderBottomRightRadius: 36,
+},
 
   saudacao: {
     color: "#d1e7dd",
@@ -366,12 +369,21 @@ const styles = StyleSheet.create({
   },
 
   resumoCard: {
-    marginHorizontal: 16,
-    marginTop: -54,
-    borderRadius: 26,
-    backgroundColor: "#ffffff",
-    elevation: 7,
+  marginHorizontal: 16,
+  marginTop: -40,
+  borderRadius: 26,
+  backgroundColor: "#ffffff",
+
+  elevation: 12,
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 6,
   },
+  shadowOpacity: 0.15,
+  shadowRadius: 10,
+},
 
   tituloLinha: {
     flexDirection: "row",
@@ -398,12 +410,25 @@ const styles = StyleSheet.create({
   },
 
   resumoItem: {
-    flex: 1,
-    backgroundColor: "#e9f5ee",
-    borderRadius: 20,
-    paddingVertical: 15,
-    alignItems: "center",
+  flex: 1,
+  backgroundColor: "#e9f5ee",
+  borderRadius: 20,
+  paddingVertical: 15,
+  alignItems: "center",
+
+  elevation: 6,
+
+  shadowColor: "#198754",
+  shadowOffset: {
+    width: 0,
+    height: 3,
   },
+  shadowOpacity: 0.12,
+  shadowRadius: 6,
+
+  borderWidth: 1,
+  borderColor: "#d8ebe0",
+},
 
   resumoNumero: {
     fontSize: 27,
@@ -438,34 +463,67 @@ const styles = StyleSheet.create({
   },
 
   acaoPrincipal: {
-    width: "48%",
-    backgroundColor: "#198754",
-    borderRadius: 24,
-    padding: 17,
-    elevation: 5,
-    minHeight: 135,
-    justifyContent: "space-between",
+  width: "48%",
+  backgroundColor: "#198754",
+  borderRadius: 24,
+  padding: 18,
+
+  elevation: 12,
+
+  shadowColor: "#198754",
+  shadowOffset: {
+    width: 0,
+    height: 8,
   },
+  shadowOpacity: 0.35,
+  shadowRadius: 12,
+
+  minHeight: 160,
+  justifyContent: "space-between",
+},
 
   acaoCard: {
-    width: "48%",
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    padding: 17,
-    elevation: 4,
-    minHeight: 135,
-    justifyContent: "space-between",
+  width: "48%",
+  backgroundColor: "#fff",
+  borderRadius: 24,
+  padding: 18,
+
+  elevation: 10,
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 6,
   },
+  shadowOpacity: 0.15,
+  shadowRadius: 10,
+
+  borderWidth: 1,
+  borderColor: "#efefef",
+
+  minHeight: 160,
+  justifyContent: "space-between",
+},
 
   acaoEscura: {
-    width: "48%",
-    backgroundColor: "#212529",
-    borderRadius: 24,
-    padding: 17,
-    elevation: 5,
-    minHeight: 135,
-    justifyContent: "space-between",
+  width: "48%",
+  backgroundColor: "#212529",
+  borderRadius: 24,
+  padding: 18,
+
+  elevation: 12,
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 8,
   },
+  shadowOpacity: 0.30,
+  shadowRadius: 12,
+
+  minHeight: 160,
+  justifyContent: "space-between",
+},
 
   acaoTitulo: {
     color: "#0f3d2e",
@@ -494,12 +552,21 @@ const styles = StyleSheet.create({
   },
 
   agendaContainer: {
-    margin: 16,
-    marginTop: 24,
-    borderRadius: 28,
-    backgroundColor: "#fff",
-    elevation: 6,
+  margin: 16,
+  marginTop: 24,
+  borderRadius: 28,
+  backgroundColor: "#fff",
+
+  elevation: 10,
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 5,
   },
+  shadowOpacity: 0.12,
+  shadowRadius: 8,
+},
 
   agendaHeader: {
     flexDirection: "row",
@@ -577,14 +644,24 @@ const styles = StyleSheet.create({
   },
 
   cardHorizontal: {
-    width: 170,
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    padding: 16,
-    marginRight: 12,
-    elevation: 4,
-    minHeight: 140,
+  width: 180,
+  backgroundColor: "#fff",
+  borderRadius: 24,
+  padding: 16,
+  marginRight: 12,
+
+  elevation: 8,
+
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 4,
   },
+  shadowOpacity: 0.12,
+  shadowRadius: 8,
+
+  minHeight: 150,
+},
 
   horizontalTitulo: {
     color: "#0f3d2e",

@@ -276,10 +276,9 @@ export default function ClientesScreen() {
     >
       <View style={styles.container}>
 
-        {renderCabecalho()}
-
         <FlatList
           data={mostrarPesquisa ? clientesFiltrados : clientes}
+          ListHeaderComponent={renderCabecalho()}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -358,7 +357,8 @@ const styles = StyleSheet.create({
   },
 
   lista: {
-    paddingBottom: 50,
+    paddingBottom: 10,
+    paddingTop: 20,
   },
 
   titulo: {
@@ -445,9 +445,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#ffffff",
     padding: 15,
-    borderRadius: 16,
-    marginBottom: 12,
-    elevation: 3,
+    borderRadius: 28,
+    marginBottom: 18,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
 
   cardTopo: {

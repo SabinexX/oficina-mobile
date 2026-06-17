@@ -12,8 +12,9 @@ import {
 } from "react-native-paper";
 
 import { apiOficina } from "../api/api";
-export default function OrcamentosScreen({ navigation }) {
+export default function OrcamentosScreen({ navigation, route }) {
     const [servicos, setServicos] = useState([]);
+    const servicoId = route?.params?.servicoId;
 
     useFocusEffect(
         useCallback(() => {
@@ -25,12 +26,20 @@ export default function OrcamentosScreen({ navigation }) {
         try {
             const response = await apiOficina.get("/servicos");
 
-            // Aqui remove da tela de Orçamentos tudo que já foi finalizado
             const listaSemFinalizados = response.data.filter(
                 (item) => item.status !== "SERVICO_FINALIZADO"
             );
 
+            if (servicoId) {
+                listaSemFinalizados.sort((a, b) => {
+                    if (a.id === servicoId) return -1;
+                    if (b.id === servicoId) return 1;
+                    return 0;
+                });
+            }
+
             setServicos(listaSemFinalizados);
+
         } catch (error) {
             console.log(error);
             Alert.alert("Erro", "Não foi possível carregar os orçamentos.");
@@ -171,7 +180,13 @@ export default function OrcamentosScreen({ navigation }) {
                         rippleColor="rgba(0,0,0,0.08)"
                         style={styles.ripple}
                     >
-                        <Card style={styles.cardOrcamento} mode="elevated">
+                        <Card
+  style={[
+    styles.cardOrcamento,
+    item.id === servicoId && styles.cardSelecionado,
+  ]}
+  mode="elevated"
+>
                             <Card.Content>
                                 <View style={styles.topoCard}>
                                     <Text style={styles.nomeCliente}>
@@ -319,6 +334,10 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         elevation: 5,
     },
+    cardSelecionado: {
+  borderWidth: 3,
+  borderColor: "#198754",
+},
 
     topoCard: {
         flexDirection: "row",

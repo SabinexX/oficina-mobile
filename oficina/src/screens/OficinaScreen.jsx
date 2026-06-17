@@ -9,7 +9,7 @@ import {
 import { Text, Card, Chip, Button, Divider } from "react-native-paper";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { useFocusEffect } from "@react-navigation/native";
-
+import { useEffect } from "react";
 import { apiOficina } from "../api/api";;
 
 const TopTab = createMaterialTopTabNavigator();
@@ -30,13 +30,11 @@ function nomeStatus(status) {
 
 function ListaServicos({ navigation, status, titulo, vazio }) {
   const [servicos, setServicos] = useState([]);
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
+  useEffect(() => {
       carregarServicos();
-    }, [])
-  );
+    }, []);
 
   async function carregarServicos() {
     try {
@@ -133,7 +131,9 @@ function ListaServicos({ navigation, status, titulo, vazio }) {
 
                 <TouchableOpacity
                   style={styles.botaoAbrir}
-                  onPress={() => navigation.navigate("OrcamentosLista")}
+                  onPress={() => navigation.navigate("OrcamentosLista", {
+                    servicoId: item.id,
+                  })}
                 >
                   <Text style={styles.textoAbrir}>Abrir lista</Text>
                 </TouchableOpacity>
@@ -191,6 +191,7 @@ export default function OficinaScreen() {
 
       <TopTab.Navigator
         screenOptions={{
+          lazy: false,
           swipeEnabled: true,
           tabBarActiveTintColor: "#0f5132",
           tabBarInactiveTintColor: "#777",

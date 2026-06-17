@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const MEU_IP = '192.168.0.175';
+const MEU_IP = '192.168.10.161';
 
 export const apiOficina = axios.create({
   baseURL: `http://${MEU_IP}:8080`,

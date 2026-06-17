@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
     ScrollView,
     StyleSheet,
@@ -29,7 +29,17 @@ export default function BuscaPecasIAScreen() {
     const [loadingVeiculo, setLoadingVeiculo] = useState(false);
     const [loadingPeca, setLoadingPeca] = useState(false);
     const [pecaIdentificada, setPecaIdentificada] = useState(null);
+    const scrollRef = useRef(null);
+    const resultadoRef = useRef(null);
 
+useEffect(() => {
+    if (resultados.length > 0 && scrollRef.current) {
+        scrollRef.current.scrollTo({
+            y: resultadoRef.current - 20,
+            animated: true,
+        });
+    }
+}, [resultados]);
     // ─── Câmera / Galeria ────────────────────────────────────────────────────
 
     async function abrirCamera() {
@@ -195,6 +205,8 @@ export default function BuscaPecasIAScreen() {
             }
 
             setResultados(data.offers || []);
+            
+
 
             if (!data.offers || data.offers.length === 0) {
                 Alert.alert("Sem resultados", "Nenhuma oferta encontrada para essa peça.");
@@ -221,7 +233,7 @@ export default function BuscaPecasIAScreen() {
     // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} ref={scrollRef}>
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.titulo}>Busca Inteligente de Peças</Text>
@@ -394,6 +406,12 @@ export default function BuscaPecasIAScreen() {
             )}
 
             {/* Resultados */}
+           <View
+    onLayout={(event) => {
+        resultadoRef.current = event.nativeEvent.layout.y;
+    }}
+/>
+
             {resultados.length > 0 && (
                 <View style={styles.resultadosArea}>
                     <Text style={styles.resultadosTitulo}>
@@ -454,6 +472,7 @@ const styles = StyleSheet.create({
 
     header: {
         backgroundColor: "#0f5132",
+        paddingTop: 60,
         padding: 26,
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
