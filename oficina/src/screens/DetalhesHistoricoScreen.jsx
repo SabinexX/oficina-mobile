@@ -125,6 +125,10 @@ export default function DetalhesHistoricoScreen({ route, navigation }) {
           <Text style={styles.info}>
             Marca: {servico.veiculo?.marca || "Não informado"}
           </Text>
+          
+          <Text style={styles.info}>
+            Ano: {servico.veiculo?.ano || "Não informado"}
+          </Text>
 
           <Text style={styles.info}>
             Placa: {servico.veiculo?.placa || "Não informado"}

@@ -95,8 +95,7 @@ function ListaServicos({ navigation, status, titulo, vazio }) {
                   </Text>
 
                   <Text style={styles.carroTexto}>
-                    {item.veiculo?.marca} {item.veiculo?.modelo} -{" "}
-                    {item.veiculo?.placa || "Sem placa"}
+                    {item.veiculo?.marca} {item.veiculo?.modelo} {item.veiculo?.ano && `- ${item.veiculo.ano}` } {item.veiculo?.placa || "Sem placa"}
                   </Text>
                 </View>
 

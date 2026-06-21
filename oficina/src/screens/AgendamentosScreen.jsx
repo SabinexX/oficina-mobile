@@ -291,7 +291,7 @@ export default function AgendamentosScreen() {
                           : styles.carroTexto
                       }
                     >
-                      {veiculo.marca} {veiculo.modelo} - {veiculo.placa}
+                      {veiculo.marca} {veiculo.ano} {veiculo.modelo} - {veiculo.placa}
                     </Text>
                   </TouchableOpacity>
                 ))
@@ -407,7 +407,7 @@ export default function AgendamentosScreen() {
                   </Text>
 
                   <Text style={styles.infoCarro}>
-                    {item.veiculo?.marca} {item.veiculo?.modelo} -{" "}
+                    {item.veiculo?.marca} {item.veiculo?.ano} {item.veiculo?.modelo} -{" "} {}
                     {item.veiculo?.placa || "Sem placa"}
                   </Text>
 

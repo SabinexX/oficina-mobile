@@ -204,7 +204,9 @@ export default function OrcamentosScreen({ navigation, route }) {
                                 <Text style={styles.info}>
                                     🚗 Carro: {item.veiculo?.marca} {item.veiculo?.modelo}
                                 </Text>
-
+                                <Text style={styles.info}>
+                                    📅 Ano: {item.veiculo?.ano }
+                                </Text>
                                 <Text style={styles.info}>
                                     🔖 Placa: {item.veiculo?.placa}
                                 </Text>

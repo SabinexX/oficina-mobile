@@ -17,12 +17,11 @@ import { apiOficina } from "../api/api";
 export default function CarrosScreen() {
   const [carros, setCarros] = useState([]);
   const [clientes, setClientes] = useState([]);
-
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
   const [placa, setPlaca] = useState("");
   const [cor, setCor] = useState("");
-
+  const [ano, setAno] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
   const [pesquisaCliente, setPesquisaCliente] = useState("");
 
@@ -53,6 +52,7 @@ export default function CarrosScreen() {
     setModelo("");
     setPlaca("");
     setCor("");
+    setAno("");
     setClienteSelecionado(null);
     setPesquisaCliente("");
     setCarroEditando(null);
@@ -89,10 +89,10 @@ export default function CarrosScreen() {
   }
 
   async function salvarCarro() {
-    if (!marca || !modelo || !placa || !clienteSelecionado) {
+    if (!marca || !modelo || !ano || !placa || !clienteSelecionado) {
       Alert.alert(
         "Atenção",
-        "Preencha marca, modelo, placa e selecione um cliente."
+        "Preencha marca, modelo, ano, placa e selecione um cliente."
       );
       return;
     }
@@ -108,6 +108,7 @@ export default function CarrosScreen() {
       const dadosCarro = {
         marca,
         modelo,
+        ano: ano ? Number(ano) : null,
         placa: placa.toUpperCase(),
         cor,
         cliente: {
@@ -136,8 +137,10 @@ export default function CarrosScreen() {
 
     setMarca(carro.marca || "");
     setModelo(carro.modelo || "");
+    setAno(carro.ano ? String(carro.ano) : "");
     setPlaca(carro.placa || "");
     setCor(carro.cor || "");
+    
 
     if (carro.cliente) {
       setClienteSelecionado(carro.cliente);
@@ -182,8 +185,10 @@ export default function CarrosScreen() {
       carro.placa?.toLowerCase().includes(texto) ||
       carro.marca?.toLowerCase().includes(texto) ||
       carro.modelo?.toLowerCase().includes(texto) ||
+      String(carro.ano || "").includes(texto) ||
       carro.cor?.toLowerCase().includes(texto) ||
       carro.cliente?.nome?.toLowerCase().includes(texto)
+      
     );
   });
 
@@ -224,6 +229,14 @@ export default function CarrosScreen() {
             placeholder="Cor opcional"
             value={cor}
             onChangeText={setCor}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Ano"
+            value={ano}
+            onChangeText={(texto) => setAno(texto.replace(/\D/g, ""))}
+            keyboardType="numeric"
+            maxLength={4}
           />
 
           <Text style={styles.label}>Dono do veículo</Text>
@@ -323,7 +336,7 @@ export default function CarrosScreen() {
           <View style={styles.areaPesquisa}>
             <TextInput
               style={styles.input}
-              placeholder="Pesquisar por placa, marca, modelo, cor ou cliente"
+              placeholder="Pesquisar por placa, marca, modelo, cor, ano ou cliente"
               value={pesquisa}
               onChangeText={setPesquisa}
             />
@@ -339,6 +352,7 @@ export default function CarrosScreen() {
   }, [
     marca,
     modelo,
+    ano,
     placa,
     cor,
     pesquisaCliente,
@@ -381,6 +395,10 @@ export default function CarrosScreen() {
                 <View style={styles.cardInfo}>
                   <Text style={styles.nomeCarro}>
                     {item.marca} {item.modelo}
+                  </Text>
+
+                  <Text style={styles.info}>
+                    Ano: {item.ano ? item.ano : "Não informado"}
                   </Text>
 
                   <Text style={styles.info}>
